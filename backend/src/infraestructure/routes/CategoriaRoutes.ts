@@ -2,13 +2,18 @@ import { Router } from "express";
 import { CategoriaAdapter } from "../adapter/CategoriaAdapter";
 import { CategoriaApplication } from "../../application/CategoriaApplication";
 import { CategoriaController } from "../controller/CategoriaController";
+import { AuditoriaAdapter } from "../adapter/AuditoriaAdapter";
+import { AuditoriaApplication } from "../../application/AuditoriaApplication";
 import { authenticateToken } from "../web/authMiddleware";
 
 const router = Router();
 
 const categoriaAdapter = new CategoriaAdapter();
 const categoriaApp = new CategoriaApplication(categoriaAdapter);
-const categoriaController = new CategoriaController(categoriaApp);
+const auditoriaAdapter = new AuditoriaAdapter();
+const auditoriaApp = new AuditoriaApplication(auditoriaAdapter);
+
+const categoriaController = new CategoriaController(categoriaApp, auditoriaApp);
 
 router.post("/categorias", authenticateToken, async (req, res) => {
   await categoriaController.createCategoria(req, res);

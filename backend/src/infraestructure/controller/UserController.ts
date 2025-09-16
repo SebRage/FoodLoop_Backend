@@ -3,18 +3,20 @@ import { UserApplicationService } from "../../application/UserApplicationService
 import { User } from "../../domain/User";
 import { NAME_REGEX, EMAIL_REGEX, PASSWORD_REGEX } from "../../utils/RegexUtils";
 import { formatToBogotaShort } from "../../utils/DateUtils";
+import { AuditoriaApplication } from "../../application/AuditoriaApplication";
 
 export class UserController {
   private app: UserApplicationService;
+  private auditoriaApp?: AuditoriaApplication;
 
-  constructor(app: UserApplicationService) {
+  constructor(app: UserApplicationService, auditoriaApp?: AuditoriaApplication) {
     this.app = app;
+    this.auditoriaApp = auditoriaApp;
   }
 
   async login(request: Request, response: Response): Promise<Response> {
     try {
       console.log("Login body:", request.body);
-
       // aceptar tanto "email" como "correo"
       const email = request.body.email ?? request.body.correo;
       const password = request.body.password;
@@ -54,7 +56,7 @@ export class UserController {
         });
 
       const status = 1;
-  const user: Omit<User, "id"> = {
+      const user: Omit<User, "id"> = {
         tipoEntidad: request.body.tipoEntidad ?? "Individual",
         nombreEntidad: name,
         correo: email,
@@ -66,6 +68,25 @@ export class UserController {
       };
 
       const userId = await this.app.createUser(user);
+
+      // Create audit record (best-effort, don't block on failure)
+      try {
+        if (this.auditoriaApp) {
+          const actorId = (request as any).user?.id ?? undefined;
+          await this.auditoriaApp.createAuditoria({
+            usuarioId: actorId,
+            tablaAfectada: "users",
+            registroId: userId,
+            accion: "CREATE",
+            descripcion: `Usuario creado con id ${userId}`,
+            estado: 1,
+            fecha: new Date(),
+          });
+        }
+      } catch (err) {
+        console.error("Error creando auditoria (registerUser):", err);
+      }
+
       return response
         .status(201)
         .json({ message: "Usuario registrado correctamente", userId });
@@ -78,8 +99,8 @@ export class UserController {
   async getAllUsers(request: Request, response: Response): Promise<Response> {
     try {
       const users = await this.app.getAllUsers();
-  // El adapter ya devuelve `fechaRegistro` en el dominio
-  return response.status(200).json(users);
+      // El adapter ya devuelve `fechaRegistro` en el dominio
+      return response.status(200).json(users);
     } catch (error) {
       return response.status(500).json({ message: "Error en el servidor" });
     }
@@ -92,9 +113,8 @@ export class UserController {
         return response.status(400).json({ message: "Error en parámetro" });
       }
       const user = await this.app.getUserById(id);
-      if (!user)
-        return response.status(404).json({ message: "Usuario no encontrado" });
-  return response.status(200).json(user);
+      if (!user) return response.status(404).json({ message: "Usuario no encontrado" });
+      return response.status(200).json(user);
     } catch (error) {
       return response.status(500).json({ message: "Error en el servidor" });
     }
@@ -111,7 +131,7 @@ export class UserController {
       if (!user) {
         return response.status(404).json({ message: "Usuario no encontrado" });
       }
-  return response.status(200).json(user);
+      return response.status(200).json(user);
     } catch (error) {
       return response.status(500).json({ message: "Error en el servidor" });
     }
@@ -127,7 +147,7 @@ export class UserController {
       if (!user) {
         return response.status(404).json({ message: "Usuario no encontrado" });
       }
-  return response.status(200).json(user);
+      return response.status(200).json(user);
     } catch (error) {
       return response.status(500).json({ message: "Error en el servidor" });
     }
@@ -159,6 +179,25 @@ export class UserController {
       if (!deleted) {
         return response.status(404).json({ message: "Usuario no encontrado" });
       }
+
+      // Audit
+      try {
+        if (this.auditoriaApp) {
+          const actorId = (request as any).user?.id ?? undefined;
+          await this.auditoriaApp.createAuditoria({
+            usuarioId: actorId,
+            tablaAfectada: "users",
+            registroId: id,
+            accion: "DELETE",
+            descripcion: `Usuario dado de baja con id ${id}`,
+            estado: 1,
+            fecha: new Date(),
+          });
+        }
+      } catch (err) {
+        console.error("Error creando auditoria (deleteUser):", err);
+      }
+
       return response.status(200).json({ message: "Usuario dado de baja exitosamente" });
     } catch (error) {
       return response.status(500).json({ message: "Error en el servidor" });
@@ -176,6 +215,25 @@ export class UserController {
       if (!deleted) {
         return response.status(404).json({ message: "Usuario no encontrado" });
       }
+
+      // Audit for query-delete as well
+      try {
+        if (this.auditoriaApp) {
+          const actorId = (request as any).user?.id ?? undefined;
+          await this.auditoriaApp.createAuditoria({
+            usuarioId: actorId,
+            tablaAfectada: "users",
+            registroId: id,
+            accion: "DELETE",
+            descripcion: `Usuario dado de baja con id ${id} (query)` ,
+            estado: 1,
+            fecha: new Date(),
+          });
+        }
+      } catch (err) {
+        console.error("Error creando auditoria (deleteUserQuery):", err);
+      }
+
       return response.status(200).json({ message: "Usuario dado de baja exitosamente" });
     } catch (error) {
       return response.status(500).json({ message: "Error en el servidor" });
@@ -219,6 +277,25 @@ export class UserController {
           message: "Usuario no encontrado o error al actualizar",
         });
       }
+
+      // Audit
+      try {
+        if (this.auditoriaApp) {
+          const actorId = (request as any).user?.id ?? undefined;
+          await this.auditoriaApp.createAuditoria({
+            usuarioId: actorId,
+            tablaAfectada: "users",
+            registroId: id,
+            accion: "UPDATE",
+            descripcion: `Usuario actualizado con id ${id}`,
+            estado: 1,
+            fecha: new Date(),
+          });
+        }
+      } catch (err) {
+        console.error("Error creando auditoria (updateUser):", err);
+      }
+
       return response.status(200).json({ message: "Usuario actualizado con éxito" });
     } catch (error) {
       return response.status(500).json({ message: "Error en el servidor" });

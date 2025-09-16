@@ -1,12 +1,15 @@
 import { Request, Response } from "express";
 import { PublicacionApplication } from "../../application/PublicacionApplication";
 import { Publicacion } from "../../domain/Publicacion";
+import { AuditoriaApplication } from "../../application/AuditoriaApplication";
 
 export class PublicacionController {
 	private app: PublicacionApplication;
+	private auditoriaApp?: AuditoriaApplication;
 
-	constructor(app: PublicacionApplication) {
+	constructor(app: PublicacionApplication, auditoriaApp?: AuditoriaApplication) {
 		this.app = app;
+		this.auditoriaApp = auditoriaApp;
 	}
 
 	async createPublicacion(request: Request, response: Response): Promise<Response> {
@@ -26,6 +29,23 @@ export class PublicacionController {
 				fechaActualizacion: new Date(),
 			};
 			const id = await this.app.createPublicacion(pub);
+			// Audit
+			try {
+				if (this.auditoriaApp) {
+					const actorId = (request as any).user?.id ?? undefined;
+					await this.auditoriaApp.createAuditoria({
+						usuarioId: actorId,
+						tablaAfectada: "publicaciones",
+						registroId: id,
+						accion: "CREATE",
+						descripcion: `Publicación creada con id ${id}`,
+						estado: 1,
+						fecha: new Date(),
+					});
+				}
+			} catch (err) {
+				console.error("Error creando auditoria (createPublicacion):", err);
+			}
 			return response.status(201).json({ message: "Publicación creada", id });
 		} catch (error: any) {
 			console.error("createPublicacion error:", error);
@@ -62,6 +82,23 @@ export class PublicacionController {
 			if (isNaN(id)) return response.status(400).json({ message: "Id inválido" });
 			const updated = await this.app.updatePublicacion(id, request.body);
 			if (!updated) return response.status(404).json({ message: "No encontrada" });
+			// Audit
+			try {
+				if (this.auditoriaApp) {
+					const actorId = (request as any).user?.id ?? undefined;
+					await this.auditoriaApp.createAuditoria({
+						usuarioId: actorId,
+						tablaAfectada: "publicaciones",
+						registroId: id,
+						accion: "UPDATE",
+						descripcion: `Publicación actualizada con id ${id}`,
+						estado: 1,
+						fecha: new Date(),
+					});
+				}
+			} catch (err) {
+				console.error("Error creando auditoria (updatePublicacion):", err);
+			}
 			return response.status(200).json({ message: "Actualizada" });
 		} catch (error: any) {
 			console.error("updatePublicacion error:", error);
@@ -75,6 +112,23 @@ export class PublicacionController {
 			if (isNaN(id)) return response.status(400).json({ message: "Id inválido" });
 			const deleted = await this.app.deletePublicacion(id);
 			if (!deleted) return response.status(404).json({ message: "No encontrada" });
+			// Audit
+			try {
+				if (this.auditoriaApp) {
+					const actorId = (request as any).user?.id ?? undefined;
+					await this.auditoriaApp.createAuditoria({
+						usuarioId: actorId,
+						tablaAfectada: "publicaciones",
+						registroId: id,
+						accion: "DELETE",
+						descripcion: `Publicación eliminada con id ${id}`,
+						estado: 1,
+						fecha: new Date(),
+					});
+				}
+			} catch (err) {
+				console.error("Error creando auditoria (deletePublicacion):", err);
+			}
 			return response.status(200).json({ message: "Eliminada" });
 		} catch (error: any) {
 			console.error("deletePublicacion error:", error);

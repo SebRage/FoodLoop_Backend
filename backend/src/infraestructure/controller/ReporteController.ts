@@ -1,12 +1,15 @@
 import { Request, Response } from "express";
 import { ReporteApplication } from "../../application/ReporteApplication";
 import { Reporte } from "../../domain/Reporte";
+import { AuditoriaApplication } from "../../application/AuditoriaApplication";
 
 export class ReporteController {
   private app: ReporteApplication;
+  private auditoriaApp?: AuditoriaApplication;
 
-  constructor(app: ReporteApplication) {
+  constructor(app: ReporteApplication, auditoriaApp?: AuditoriaApplication) {
     this.app = app;
+    this.auditoriaApp = auditoriaApp;
   }
 
   async createReporte(request: Request, response: Response): Promise<Response> {
@@ -28,6 +31,23 @@ export class ReporteController {
       };
 
       const reporteId = await this.app.createReporte(reporte);
+      // Audit
+      try {
+        if (this.auditoriaApp) {
+          const actorId = (request as any).user?.id ?? undefined;
+          await this.auditoriaApp.createAuditoria({
+            usuarioId: actorId,
+            tablaAfectada: "reportes",
+            registroId: reporteId,
+            accion: "CREATE",
+            descripcion: `Reporte creado con id ${reporteId}`,
+            estado: 1,
+            fecha: new Date(),
+          });
+        }
+      } catch (err) {
+        console.error("Error creando auditoria (createReporte):", err);
+      }
       return response.status(201).json({ message: "Reporte creado correctamente", reporteId });
     } catch (error: any) {
       console.error("createReporte error:", error);
@@ -84,6 +104,23 @@ export class ReporteController {
       }
   const deleted = await this.app.deleteReporte(id);
       if (!deleted) return response.status(404).json({ message: "Reporte no encontrado" });
+      // Audit
+      try {
+        if (this.auditoriaApp) {
+          const actorId = (request as any).user?.id ?? undefined;
+          await this.auditoriaApp.createAuditoria({
+            usuarioId: actorId,
+            tablaAfectada: "reportes",
+            registroId: id,
+            accion: "DELETE",
+            descripcion: `Reporte eliminado con id ${id}`,
+            estado: 1,
+            fecha: new Date(),
+          });
+        }
+      } catch (err) {
+        console.error("Error creando auditoria (deleteReporte):", err);
+      }
       return response.status(200).json({ message: "Reporte eliminado exitosamente" });
     } catch (error: any) {
       console.error("deleteReporte error:", error);
@@ -132,6 +169,23 @@ export class ReporteController {
       const updated = await this.app.updateReporte(id, payload);
       if (!updated) {
         return response.status(404).json({ message: "Reporte no encontrado o error al actualizar" });
+      }
+      // Audit
+      try {
+        if (this.auditoriaApp) {
+          const actorId = (request as any).user?.id ?? undefined;
+          await this.auditoriaApp.createAuditoria({
+            usuarioId: actorId,
+            tablaAfectada: "reportes",
+            registroId: id,
+            accion: "UPDATE",
+            descripcion: `Reporte actualizado con id ${id}`,
+            estado: 1,
+            fecha: new Date(),
+          });
+        }
+      } catch (err) {
+        console.error("Error creando auditoria (updateReporte):", err);
       }
       return response.status(200).json({ message: "Reporte actualizado con éxito" });
     } catch (error: any) {

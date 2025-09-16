@@ -1,12 +1,15 @@
 import { Request, Response } from "express";
 import { CategoriaApplication } from "../../application/CategoriaApplication";
 import { Categoria } from "../../domain/Categoria";
+import { AuditoriaApplication } from "../../application/AuditoriaApplication";
 
 export class CategoriaController {
 	private app: CategoriaApplication;
+	private auditoriaApp?: AuditoriaApplication;
 
-	constructor(app: CategoriaApplication) {
+	constructor(app: CategoriaApplication, auditoriaApp?: AuditoriaApplication) {
 		this.app = app;
+		this.auditoriaApp = auditoriaApp;
 	}
 
 	async createCategoria(request: Request, response: Response): Promise<Response> {
@@ -19,6 +22,23 @@ export class CategoriaController {
 				estado: 1,
 			};
 			const id = await this.app.createCategoria(cat);
+			// Audit
+			try {
+				if (this.auditoriaApp) {
+					const actorId = (request as any).user?.id ?? undefined;
+					await this.auditoriaApp.createAuditoria({
+						usuarioId: actorId,
+						tablaAfectada: "categorias",
+						registroId: id,
+						accion: "CREATE",
+						descripcion: `Categoría creada con id ${id}`,
+						estado: 1,
+						fecha: new Date(),
+					});
+				}
+			} catch (err) {
+				console.error("Error creando auditoria (createCategoria):", err);
+			}
 			return response.status(201).json({ message: "Categoría creada", id });
 		} catch (error: any) {
 			console.error("createCategoria error:", error);
@@ -55,6 +75,23 @@ export class CategoriaController {
 			if (isNaN(id)) return response.status(400).json({ message: "Id inválido" });
 			const updated = await this.app.updateCategoria(id, request.body);
 			if (!updated) return response.status(404).json({ message: "No encontrada" });
+			// Audit
+			try {
+				if (this.auditoriaApp) {
+					const actorId = (request as any).user?.id ?? undefined;
+					await this.auditoriaApp.createAuditoria({
+						usuarioId: actorId,
+						tablaAfectada: "categorias",
+						registroId: id,
+						accion: "UPDATE",
+						descripcion: `Categoría actualizada con id ${id}`,
+						estado: 1,
+						fecha: new Date(),
+					});
+				}
+			} catch (err) {
+				console.error("Error creando auditoria (updateCategoria):", err);
+			}
 			return response.status(200).json({ message: "Actualizada" });
 		} catch (error: any) {
 			console.error("updateCategoria error:", error);
@@ -68,6 +105,23 @@ export class CategoriaController {
 			if (isNaN(id)) return response.status(400).json({ message: "Id inválido" });
 			const deleted = await this.app.deleteCategoria(id);
 			if (!deleted) return response.status(404).json({ message: "No encontrada" });
+			// Audit
+			try {
+				if (this.auditoriaApp) {
+					const actorId = (request as any).user?.id ?? undefined;
+					await this.auditoriaApp.createAuditoria({
+						usuarioId: actorId,
+						tablaAfectada: "categorias",
+						registroId: id,
+						accion: "DELETE",
+						descripcion: `Categoría eliminada con id ${id}`,
+						estado: 1,
+						fecha: new Date(),
+					});
+				}
+			} catch (err) {
+				console.error("Error creando auditoria (deleteCategoria):", err);
+			}
 			return response.status(200).json({ message: "Eliminada" });
 		} catch (error: any) {
 			console.error("deleteCategoria error:", error);

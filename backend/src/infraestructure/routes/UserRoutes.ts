@@ -2,6 +2,8 @@ import { Router } from "express";
 import { UserAdapter } from "../adapter/UserAdapter";
 import { UserApplicationService } from "../../application/UserApplicationService";
 import { UserController } from "../controller/UserController";
+import { AuditoriaAdapter } from "../adapter/AuditoriaAdapter";
+import { AuditoriaApplication } from "../../application/AuditoriaApplication";
 import { authenticateToken } from "../web/authMiddleware";
 
 const router = Router();
@@ -9,7 +11,12 @@ const router = Router();
 
 const userAdapter = new UserAdapter();
 const userApp = new UserApplicationService(userAdapter);
-const userController = new UserController(userApp);
+
+// auditoria instances
+const auditoriaAdapter = new AuditoriaAdapter();
+const auditoriaApp = new AuditoriaApplication(auditoriaAdapter);
+
+const userController = new UserController(userApp, auditoriaApp);
 
 router.post("/login", async (request, response) => {
     await userController.login(request, response);

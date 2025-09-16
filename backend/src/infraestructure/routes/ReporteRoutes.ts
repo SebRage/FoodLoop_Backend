@@ -3,13 +3,17 @@ import { ReporteAdapter } from "../adapter/ReporteAdapter";
 import { ReporteApplication } from "../../application/ReporteApplication";
 import { ReporteController } from "../controller/ReporteController";
 import { authenticateToken } from "../web/authMiddleware";
+import { AuditoriaAdapter } from "../adapter/AuditoriaAdapter";
+import { AuditoriaApplication } from "../../application/AuditoriaApplication";
 
 const router = Router();
 
 // ... crear instancias usando el adaptador y la aplicación
 const reporteAdapter = new ReporteAdapter();
 const reporteApp = new ReporteApplication(reporteAdapter);
-const reporteController = new ReporteController(reporteApp);
+const auditoriaAdapter = new AuditoriaAdapter();
+const auditoriaApp = new AuditoriaApplication(auditoriaAdapter);
+const reporteController = new ReporteController(reporteApp, auditoriaApp);
 
 router.post("/reportes", async (request, response) => {
   try {

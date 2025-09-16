@@ -3,12 +3,16 @@ import { PublicacionAdapter } from "../adapter/PublicacionAdapter";
 import { PublicacionApplication } from "../../application/PublicacionApplication";
 import { PublicacionController } from "../controller/PublicacionController";
 import { authenticateToken } from "../web/authMiddleware";
+import { AuditoriaAdapter } from "../adapter/AuditoriaAdapter";
+import { AuditoriaApplication } from "../../application/AuditoriaApplication";
 
 const router = Router();
 
 const publicacionAdapter = new PublicacionAdapter();
 const publicacionApp = new PublicacionApplication(publicacionAdapter);
-const publicacionController = new PublicacionController(publicacionApp);
+const auditoriaAdapter = new AuditoriaAdapter();
+const auditoriaApp = new AuditoriaApplication(auditoriaAdapter);
+const publicacionController = new PublicacionController(publicacionApp, auditoriaApp);
 
 router.post("/publicaciones", authenticateToken, async (req, res) => {
   await publicacionController.createPublicacion(req, res);
