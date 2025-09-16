@@ -4,6 +4,14 @@ import { UserPort } from "../../domain/UserPort";
 import { UserEntity } from "../entities/UserEntity";
 import { AppDataSource } from "../config/data-base";
 import { Repository } from "typeorm";
+let DateTime: any = null;
+try {
+    // require en runtime para evitar errores si la dependencia no está instalada en tiempo de compilación
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    DateTime = require('luxon').DateTime;
+} catch (e) {
+    DateTime = null;
+}
 
 export class UserAdapter implements UserPort {
     private userRepository: Repository<UserEntity>;
@@ -14,6 +22,28 @@ export class UserAdapter implements UserPort {
 
     // Convertir entidad de persistencia a dominio
     private toDomain(user: UserEntity): UserDomain {
+        // mapear entidad a dominio y devolver la fecha formateada
+        // usar luxon si está disponible para formatear con zona Bogotá
+        let formatted: string | undefined = undefined;
+        try {
+            if (DateTime && user.fecha_registro) {
+                formatted = DateTime.fromJSDate(user.fecha_registro).setZone('America/Bogota').toFormat('yyyy-MM-dd h:mm:ssa').toLowerCase();
+            } else if (user.fecha_registro) {
+                // fallback manual
+                const d = new Date(user.fecha_registro);
+                const pad = (n: number) => n.toString().padStart(2, '0');
+                // ajustar a Bogotá
+                const utcMs = d.getTime() + (d.getTimezoneOffset() * 60000);
+                const bogota = new Date(utcMs + (-5 * 60 * 60000));
+                let hour = bogota.getHours();
+                const ampm = hour >= 12 ? 'pm' : 'am';
+                hour = hour % 12; if (hour === 0) hour = 12;
+                formatted = `${bogota.getFullYear()}-${pad(bogota.getMonth()+1)}-${pad(bogota.getDate())} ${hour}:${pad(bogota.getMinutes())}:${pad(bogota.getSeconds())}${ampm}`;
+            }
+        } catch (e) {
+            formatted = undefined;
+        }
+
         return {
             id: user.id_usuario,
             tipoEntidad: user.tipo_entidad,
@@ -24,7 +54,7 @@ export class UserAdapter implements UserPort {
             direccion: user.direccion,
             password: user.password,
             estado: user.estado,
-            fechaRegistro: user.fecha_registro,
+            fechaRegistro: formatted,
         };
     }
 
@@ -39,7 +69,21 @@ export class UserAdapter implements UserPort {
         userEntity.direccion = user.direccion ?? "";
         userEntity.password = user.password;
         userEntity.estado = user.estado;
-        userEntity.fecha_registro = user.fechaRegistro ?? new Date();
+        // la fecha de registro siempre será la fecha actual en zona Bogotá
+        const now = new Date();
+        let isoWithOffset: string;
+        if (DateTime) {
+            isoWithOffset = DateTime.fromJSDate(now).setZone('America/Bogota').toISO({ includeOffset: true, suppressMilliseconds: true });
+        } else {
+            const utcMs = now.getTime() + (now.getTimezoneOffset() * 60000);
+            const bogotaMs = utcMs + (-5 * 60 * 60000);
+            const bogota = new Date(bogotaMs);
+            const pad = (n: number) => n.toString().padStart(2, '0');
+            const datePart = `${bogota.getFullYear()}-${pad(bogota.getMonth() + 1)}-${pad(bogota.getDate())}`;
+            const timePart = `${pad(bogota.getHours())}:${pad(bogota.getMinutes())}:${pad(bogota.getSeconds())}`;
+            isoWithOffset = `${datePart}T${timePart}-05:00`;
+        }
+        userEntity.fecha_registro = new Date(isoWithOffset);
         return userEntity;
     }
 

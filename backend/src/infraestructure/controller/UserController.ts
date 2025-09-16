@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import { UserApplicationService } from "../../application/UserApplicationService";
 import { User } from "../../domain/User";
 import { NAME_REGEX, EMAIL_REGEX, PASSWORD_REGEX } from "../../utils/RegexUtils";
+import { formatToBogotaShort } from "../../utils/DateUtils";
 
 export class UserController {
   private app: UserApplicationService;
@@ -53,7 +54,7 @@ export class UserController {
         });
 
       const status = 1;
-      const user: Omit<User, "id"> = {
+  const user: Omit<User, "id"> = {
         tipoEntidad: request.body.tipoEntidad ?? "Individual",
         nombreEntidad: name,
         correo: email,
@@ -62,7 +63,6 @@ export class UserController {
         direccion: request.body.direccion ?? "",
         password,
         estado: status,
-        fechaRegistro: request.body.fechaRegistro ? new Date(request.body.fechaRegistro) : undefined,
       };
 
       const userId = await this.app.createUser(user);
@@ -78,7 +78,8 @@ export class UserController {
   async getAllUsers(request: Request, response: Response): Promise<Response> {
     try {
       const users = await this.app.getAllUsers();
-      return response.status(200).json(users);
+  // El adapter ya devuelve `fechaRegistro` en el dominio
+  return response.status(200).json(users);
     } catch (error) {
       return response.status(500).json({ message: "Error en el servidor" });
     }
@@ -93,7 +94,7 @@ export class UserController {
       const user = await this.app.getUserById(id);
       if (!user)
         return response.status(404).json({ message: "Usuario no encontrado" });
-      return response.status(200).json(user);
+  return response.status(200).json(user);
     } catch (error) {
       return response.status(500).json({ message: "Error en el servidor" });
     }
@@ -110,7 +111,7 @@ export class UserController {
       if (!user) {
         return response.status(404).json({ message: "Usuario no encontrado" });
       }
-      return response.status(200).json(user);
+  return response.status(200).json(user);
     } catch (error) {
       return response.status(500).json({ message: "Error en el servidor" });
     }
@@ -126,7 +127,7 @@ export class UserController {
       if (!user) {
         return response.status(404).json({ message: "Usuario no encontrado" });
       }
-      return response.status(200).json(user);
+  return response.status(200).json(user);
     } catch (error) {
       return response.status(500).json({ message: "Error en el servidor" });
     }

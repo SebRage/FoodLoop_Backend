@@ -1,5 +1,6 @@
 import express, { Response, Request } from "express";
 import userRoutes from "../routes/UserRoutes";
+import reporteRoutes from "../routes/ReporteRoutes";
 import cors from "cors";
 class App {
   private app!: express.Application;
@@ -15,7 +16,8 @@ class App {
   }
 
   private routes(): void {
-    this.app.use("/foodloop", userRoutes);
+  this.app.use("/foodloop", userRoutes);
+  this.app.use("/foodloop", reporteRoutes);
   }
 
   getApp() {

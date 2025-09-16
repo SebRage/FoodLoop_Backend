@@ -8,5 +8,5 @@ export interface User {
     direccion?: string;
     password: string;
     estado: number;
-    fechaRegistro?: Date;
+    fechaRegistro?: string;
 }

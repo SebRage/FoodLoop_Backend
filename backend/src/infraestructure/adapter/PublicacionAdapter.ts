@@ -29,13 +29,13 @@ export class PublicacionAdapter implements PublicacionPort {
         };
     }
 
-    // Mapea los datos del dominio a la entidad del ORM
+    
     private toEntity(publicacion: Omit<Publicacion, "id">): PublicacionEntity {
         const entity = new PublicacionEntity();
         entity.usuario_id = publicacion.usuarioId;
         entity.categoria_id = publicacion.categoriaId;
         entity.titulo = publicacion.titulo!;
-        entity.descripcion = publicacion.descripcion!; // uso de "descripcion" ya que el esquema la define así
+        entity.descripcion = publicacion.descripcion!; 
         entity.tipo = publicacion.tipo!;
         entity.cantidad = publicacion.cantidad!;
         entity.precio = publicacion.precio!;
