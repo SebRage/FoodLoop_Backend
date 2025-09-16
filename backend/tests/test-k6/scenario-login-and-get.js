@@ -14,7 +14,7 @@ const BASE = __ENV.BASE_URL || 'http://localhost:3000/foodloop';
 export default function () {
   group('login + get users', function () {
     // replace with valid credentials or a test user you create
-    const loginRes = http.post(`${BASE}/login`, JSON.stringify({ correo: 'test@example.com', password: 'secret' }), { headers: { 'Content-Type': 'application/json' } });
+    const loginRes = http.post(`${BASE}/login`, JSON.stringify({ correo: 'prueba@prueba.com', password: 'prueba123' }), { headers: { 'Content-Type': 'application/json' } });
     check(loginRes, {
       'login status 200': (r) => r.status === 200
     });

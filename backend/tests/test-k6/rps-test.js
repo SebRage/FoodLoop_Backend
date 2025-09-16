@@ -23,9 +23,12 @@ export let options = {
 };
 
 const BASE = __ENV.BASE_URL || 'http://localhost:3000/foodloop';
+// PATH can be set via --env PATH=/publicaciones, default to /publicaciones
+const PATH = __ENV.PATH || '/publicaciones';
 
 export default function () {
-  const res = http.get(`${BASE}/users`);
+  const url = `${BASE}${PATH}`;
+  const res = http.get(url);
   const ok = check(res, {
     'status is 200': (r) => r.status === 200,
   });

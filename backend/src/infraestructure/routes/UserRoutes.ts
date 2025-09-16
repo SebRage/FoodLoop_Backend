@@ -4,7 +4,7 @@ import { UserApplicationService } from "../../application/UserApplicationService
 import { UserController } from "../controller/UserController";
 import { AuditoriaAdapter } from "../adapter/AuditoriaAdapter";
 import { AuditoriaApplication } from "../../application/AuditoriaApplication";
-import { authenticateToken } from "../web/authMiddleware";
+import { authenticateToken } from '../web/authMiddleware';
 
 const router = Router();
 
@@ -22,7 +22,7 @@ router.post("/login", async (request, response) => {
     await userController.login(request, response);
 });
 
-router.post("/users", async (request, response) => {
+router.post("/users", authenticateToken, async (request, response) => {
     try {
         await userController.registerUser(request, response);
     } catch (error) {
