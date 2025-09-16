@@ -1,6 +1,8 @@
-import { Column, Entity, PrimaryGeneratedColumn } from "typeorm";
+import { Column, Entity, PrimaryGeneratedColumn, ManyToOne, JoinColumn } from "typeorm";
+import { UserEntity } from "./UserEntity";
+import { CategoriaEntity } from "./CategoriaEntity";
 
-@Entity({ name: "publicacion" })
+@Entity({ name: "publicaciones" })
 export class PublicacionEntity {
   @PrimaryGeneratedColumn()
   id_publicacion!: number;
@@ -10,6 +12,14 @@ export class PublicacionEntity {
 
   @Column({ type: "int" })
   categoria_id!: number;
+
+  @ManyToOne(() => UserEntity, (user) => user.publicaciones, { onDelete: 'NO ACTION', onUpdate: 'CASCADE' })
+  @JoinColumn({ name: 'usuario_id' })
+  usuario!: UserEntity;
+
+  @ManyToOne(() => CategoriaEntity, (cat) => cat.id_categoria, { onDelete: 'NO ACTION', onUpdate: 'CASCADE' })
+  @JoinColumn({ name: 'categoria_id' })
+  categoria!: CategoriaEntity;
 
   @Column({ type: "character varying", length: 255 })
   titulo!: string;
@@ -32,9 +42,9 @@ export class PublicacionEntity {
   @Column({ type: "int", default: 1 })
   estado!: number;
 
-  @Column({ type: "timestamp" })
+  @Column({ type: "timestamptz" })
   fecha_creacion!: Date;
 
-  @Column({ type: "timestamp" })
+  @Column({ type: "timestamptz" })
   fecha_actualizacion!: Date;
 }

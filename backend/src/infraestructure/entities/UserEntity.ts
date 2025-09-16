@@ -1,5 +1,7 @@
 import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from "typeorm";
 import { ReporteEntity } from "./ReporteEntity";
+import { PublicacionEntity } from "./PublicacionEntity";
+import { TransaccionEntity } from "./TransaccionEntity";
 
 @Entity({ name: "usuarios" })
 export class UserEntity {
@@ -35,4 +37,13 @@ export class UserEntity {
   
   @OneToMany(() => ReporteEntity, (ReporteEntity) => ReporteEntity.reportante)
   reportes!: ReporteEntity[];
+
+  @OneToMany(() => PublicacionEntity, (publicacion) => publicacion.usuario)
+  publicaciones!: PublicacionEntity[];
+
+  @OneToMany(() => TransaccionEntity, (t) => t.donante)
+  transaccionesDonadas!: TransaccionEntity[];
+
+  @OneToMany(() => TransaccionEntity, (t) => t.beneficiario)
+  transaccionesRecibidas!: TransaccionEntity[];
 }

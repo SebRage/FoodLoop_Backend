@@ -55,6 +55,29 @@ export class UserAdapter implements UserPort {
             password: user.password,
             estado: user.estado,
             fechaRegistro: formatted,
+            // Relaciones opcionales
+            publicaciones: user.publicaciones ? user.publicaciones.map(p => ({
+                id: p.id_publicacion,
+                usuarioId: p.usuario_id,
+                categoriaId: p.categoria_id,
+                titulo: p.titulo,
+                descripcion: p.descripcion,
+                tipo: p.tipo,
+                cantidad: p.cantidad,
+                precio: p.precio,
+                fechaCaducidad: p.fecha_caducidad,
+                estado: p.estado,
+                fechaCreacion: p.fecha_creacion,
+                fechaActualizacion: p.fecha_actualizacion,
+            })) : undefined,
+            reportes: user.reportes ? user.reportes.map(r => ({
+                id: r.id_reporte,
+                reportanteId: r.reportante_id,
+                publicacionId: r.publicacion_id,
+                descripcion: r.descripcion,
+                estado: r.estado,
+                fechaReporte: r.fecha_reporte,
+            })) : undefined,
         };
     }
 
@@ -102,6 +125,7 @@ export class UserAdapter implements UserPort {
         try {
             const user = await this.userRepository.findOne({
                 where: { id_usuario: id },
+                relations: ["reportes", "publicaciones"]
             });
             return user ? this.toDomain(user) : null;
         } catch (error) {
@@ -124,7 +148,7 @@ export class UserAdapter implements UserPort {
 
     async getAllUsers(): Promise<User[]> {
         try {
-            const users = await this.userRepository.find();
+            const users = await this.userRepository.find({ relations: ["reportes", "publicaciones"] });
             return users.map(user => this.toDomain(user));
         } catch (error) {
             console.error("Error al buscar todos los usuarios: ", error);

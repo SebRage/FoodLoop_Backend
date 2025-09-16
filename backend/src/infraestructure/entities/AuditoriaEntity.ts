@@ -5,8 +5,8 @@ import { UserEntity } from "./UserEntity";
 export class AuditoriaEntity {
   @PrimaryGeneratedColumn()
   id_log!: number;
-
-
+  @ManyToOne(() => UserEntity, (user) => user.id_usuario, { onDelete: 'NO ACTION', onUpdate: 'CASCADE' })
+  @JoinColumn({ name: 'usuario_id' })
   usuario!: UserEntity;
 
   @Column({ type: "character varying", length: 100 })

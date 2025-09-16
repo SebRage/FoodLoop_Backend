@@ -1,6 +1,7 @@
-import { Column, Entity, PrimaryGeneratedColumn } from "typeorm";
+import { Column, Entity, PrimaryGeneratedColumn, OneToMany } from "typeorm";
+import { PublicacionEntity } from "./PublicacionEntity";
 
-@Entity({ name: "categoria" })
+@Entity({ name: "categorias" })
 export class CategoriaEntity {
   @PrimaryGeneratedColumn()
   id_categoria!: number;
@@ -13,4 +14,7 @@ export class CategoriaEntity {
 
   @Column({ type: "int", default: 1 })
   estado!: number;
+
+  @OneToMany(() => PublicacionEntity, (p) => p.categoria)
+  publicaciones!: PublicacionEntity[];
 }

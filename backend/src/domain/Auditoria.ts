@@ -1,8 +1,10 @@
 export interface Auditoria {
-    id_log: number;
-    usuario_id: number;
-    accion: string;        
+    id: number;
+    usuarioId?: number;
+    tablaAfectada?: string;
+    registroId?: number;
+    accion: string;
     descripcion: string;
-    estado: number;        
+    estado: number;
     fecha: Date;
 }

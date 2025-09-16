@@ -1,16 +1,17 @@
 import { Column, Entity, ManyToOne, PrimaryGeneratedColumn, JoinColumn } from "typeorm";
 import { UserEntity } from "./UserEntity";
+import { PublicacionEntity } from "./PublicacionEntity";
 
-@Entity({ name: "reporte" })
+@Entity({ name: "reportes" })
 export class ReporteEntity {
   @PrimaryGeneratedColumn()
   id_reporte!: number;
 
   @Column({ type: "int" })
-  reportanteId!: number;
+  reportante_id!: number;
 
   @Column({ type: "int" })
-  publicacionId!: number;
+  publicacion_id!: number;
 
   @Column({ type: "character varying" })
   descripcion!: string;
@@ -19,13 +20,20 @@ export class ReporteEntity {
   estado!: number;
 
   @Column({ type: "timestamptz" })
-  fechaReporte!: Date;
+  fecha_reporte!: Date;
 
-  @ManyToOne(() => UserEntity, (UserEntity) => UserEntity.id_usuario, {
+  @ManyToOne(() => UserEntity, (user) => user.reportes, {
     onUpdate: "CASCADE",
     onDelete: "NO ACTION",
   })
-  @JoinColumn({ name: "reportanteId" })
+  @JoinColumn({ name: "reportante_id" })
   reportante!: UserEntity;
+
+  @ManyToOne(() => PublicacionEntity, (p) => p.id_publicacion, {
+    onUpdate: "CASCADE",
+    onDelete: "NO ACTION",
+  })
+  @JoinColumn({ name: "publicacion_id" })
+  publicacion!: PublicacionEntity;
 
 }

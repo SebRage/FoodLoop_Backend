@@ -9,4 +9,6 @@ export interface User {
     password: string;
     estado: number;
     fechaRegistro?: string;
+    publicaciones?: any[];
+    reportes?: any[];
 }

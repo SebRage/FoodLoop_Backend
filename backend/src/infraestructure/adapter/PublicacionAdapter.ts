@@ -26,6 +26,25 @@ export class PublicacionAdapter implements PublicacionPort {
             estado: entity.estado,
             fechaCreacion: entity.fecha_creacion,
             fechaActualizacion: entity.fecha_actualizacion,
+            // Relaciones opcionales
+            ...(entity.usuario ? { usuario: {
+                id: entity.usuario.id_usuario,
+                tipoEntidad: entity.usuario.tipo_entidad,
+                nombreEntidad: entity.usuario.nombre_entidad,
+                correo: entity.usuario.correo,
+                telefono: entity.usuario.telefono,
+                ubicacion: entity.usuario.ubicacion,
+                direccion: entity.usuario.direccion,
+                password: entity.usuario.password,
+                estado: entity.usuario.estado,
+                fechaRegistro: entity.usuario.fecha_registro ? entity.usuario.fecha_registro.toISOString() : undefined,
+            }} : {}),
+            ...(entity.categoria ? { categoria: {
+                id: entity.categoria.id_categoria,
+                nombre: entity.categoria.nombre,
+                descripcion: entity.categoria.descripcion,
+                estado: entity.categoria.estado,
+            } } : {}),
         };
     }
 
@@ -59,7 +78,7 @@ export class PublicacionAdapter implements PublicacionPort {
 
     async getPublicacionById(id: number): Promise<Publicacion | null> {
         try {
-            const entity = await this.publicacionRepository.findOne({ where: { id_publicacion: id } });
+            const entity = await this.publicacionRepository.findOne({ where: { id_publicacion: id }, relations: ["usuario", "categoria"] });
             return entity ? this.toDomain(entity) : null;
         } catch (error) {
             console.error("Error al obtener publicación por id", error);
@@ -69,7 +88,7 @@ export class PublicacionAdapter implements PublicacionPort {
 
     async getAllPublicaciones(): Promise<Publicacion[]> {
         try {
-            const entities = await this.publicacionRepository.find();
+            const entities = await this.publicacionRepository.find({ relations: ["usuario", "categoria"] });
             return entities.map(entity => this.toDomain(entity));
         } catch (error) {
             console.error("Error al obtener todas las publicaciones", error);

@@ -14,19 +14,38 @@ export class TransaccionAdapter implements TransaccionPort {
     private toDomain(entity: TransaccionEntity): Transaccion {
         return {
             id: entity.id_transaccion,
-            monto: entity.monto,
-            descripcion: entity.descripcion,
+            publicacionId: entity.publicacion_id,
+            donanteVendedorId: entity.donante_vendedor_id,
+            beneficiarioCompradorId: entity.beneficiario_comprador_id,
             estado: entity.estado,
-            fecha: entity.fecha,
+            fechaTransaccion: entity.fecha_transaccion,
+            // Relaciones opcionales
+            ...(entity.donante ? { donante: {
+                id: entity.donante.id_usuario,
+                tipoEntidad: entity.donante.tipo_entidad,
+                nombreEntidad: entity.donante.nombre_entidad,
+                correo: entity.donante.correo,
+            }} : {}),
+            ...(entity.beneficiario ? { beneficiario: {
+                id: entity.beneficiario.id_usuario,
+                tipoEntidad: entity.beneficiario.tipo_entidad,
+                nombreEntidad: entity.beneficiario.nombre_entidad,
+                correo: entity.beneficiario.correo,
+            }} : {}),
+            ...(entity.publicacion ? { publicacion: {
+                id: entity.publicacion.id_publicacion,
+                titulo: entity.publicacion.titulo,
+            }} : {}),
         };
     }
 
     private toEntity(transaccion: Omit<Transaccion, "id">): TransaccionEntity {
         const entity = new TransaccionEntity();
-        entity.monto = transaccion.monto;
-        entity.descripcion = transaccion.descripcion!;
+        entity.publicacion_id = transaccion.publicacionId;
+        entity.donante_vendedor_id = transaccion.donanteVendedorId;
+        entity.beneficiario_comprador_id = transaccion.beneficiarioCompradorId;
         entity.estado = transaccion.estado;
-        entity.fecha = transaccion.fecha!;
+        entity.fecha_transaccion = transaccion.fechaTransaccion!;
         return entity;
     }
 
@@ -43,7 +62,7 @@ export class TransaccionAdapter implements TransaccionPort {
 
     async getTransaccionById(id: number): Promise<Transaccion | null> {
         try {
-            const entity = await this.transaccionRepository.findOne({ where: { id_transaccion: id } });
+            const entity = await this.transaccionRepository.findOne({ where: { id_transaccion: id }, relations: ["donante", "beneficiario", "publicacion"] });
             return entity ? this.toDomain(entity) : null;
         } catch (error) {
             console.error("Error al obtener transacción por id", error);
@@ -53,7 +72,7 @@ export class TransaccionAdapter implements TransaccionPort {
 
     async getAllTransacciones(): Promise<Transaccion[]> {
         try {
-            const entities = await this.transaccionRepository.find();
+            const entities = await this.transaccionRepository.find({ relations: ["donante", "beneficiario", "publicacion"] });
             return entities.map(entity => this.toDomain(entity));
         } catch (error) {
             console.error("Error al obtener todas las transacciones", error);
@@ -67,10 +86,11 @@ export class TransaccionAdapter implements TransaccionPort {
             if (!existing) {
                 throw new Error("Transacción no encontrada");
             }
-            existing.monto = transaccion.monto ?? existing.monto;
-            existing.descripcion = transaccion.descripcion ?? existing.descripcion;
+            existing.publicacion_id = transaccion.publicacionId ?? existing.publicacion_id;
+            existing.donante_vendedor_id = transaccion.donanteVendedorId ?? existing.donante_vendedor_id;
+            existing.beneficiario_comprador_id = transaccion.beneficiarioCompradorId ?? existing.beneficiario_comprador_id;
             existing.estado = transaccion.estado ?? existing.estado;
-            existing.fecha = transaccion.fecha ?? existing.fecha;
+            existing.fecha_transaccion = transaccion.fechaTransaccion ?? existing.fecha_transaccion;
             await this.transaccionRepository.save(existing);
             return true;
         } catch (error) {
