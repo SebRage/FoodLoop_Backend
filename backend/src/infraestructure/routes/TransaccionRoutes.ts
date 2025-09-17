@@ -14,24 +14,44 @@ const auditoriaAdapter = new AuditoriaAdapter();
 const auditoriaApp = new AuditoriaApplication(auditoriaAdapter);
 const transaccionController = new TransaccionController(transaccionApp, auditoriaApp);
 
-router.post("/transacciones", authenticateToken, async (req, res) => {
-  await transaccionController.createTransaccion(req, res);
+router.post("/transacciones", authenticateToken, async (request, response) => {
+  try {
+    await transaccionController.createTransaccion(request, response);
+  } catch (error) {
+    response.status(400).json({ message: "Error al crear transacción" });
+  }
 });
 
-router.get("/transacciones", authenticateToken, async (req, res) => {
-  await transaccionController.getAllTransacciones(req, res);
+router.get("/transacciones", authenticateToken, async (request, response) => {
+  try {
+    await transaccionController.getAllTransacciones(request, response);
+  } catch (error) {
+    response.status(400).json({ message: "Error al obtener transacciones" });
+  }
 });
 
-router.get("/transacciones/:id", authenticateToken, async (req, res) => {
-  await transaccionController.getTransaccionById(req, res);
+router.get("/transacciones/:id", authenticateToken, async (request, response) => {
+  try {
+    await transaccionController.getTransaccionById(request, response);
+  } catch (error) {
+    response.status(400).json({ message: "Error al obtener transacción" });
+  }
 });
 
-router.put("/transacciones/:id", authenticateToken, async (req, res) => {
-  await transaccionController.updateTransaccion(req, res);
+router.put("/transacciones/:id", authenticateToken, async (request, response) => {
+  try {
+    await transaccionController.updateTransaccion(request, response);
+  } catch (error) {
+    response.status(400).json({ message: "Error al actualizar transacción" });
+  }
 });
 
-router.put("/transacciones/delete/:id", authenticateToken, async (req, res) => {
-  await transaccionController.deleteTransaccion(req, res);
+router.put("/transacciones/delete/:id", authenticateToken, async (request, response) => {
+  try {
+    await transaccionController.deleteTransaccion(request, response);
+  } catch (error) {
+    response.status(400).json({ message: "Error al eliminar transacción" });
+  }
 });
 
 export default router;

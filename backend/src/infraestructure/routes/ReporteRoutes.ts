@@ -23,7 +23,7 @@ router.post("/reportes", async (request, response) => {
   }
 });
 
-router.get("/reportes", authenticateToken, async (request, response) => {
+router.get("/reportes",authenticateToken, async (request, response) => {
   try {
     await reporteController.getAllReportes(request, response);
   } catch (error) {
@@ -31,7 +31,7 @@ router.get("/reportes", authenticateToken, async (request, response) => {
   }
 });
 
-router.get("/reportes/:id", async (request, response) => {
+router.get("/reportes/:id",authenticateToken, async (request, response) => {
   try {
     await reporteController.getReporteById(request, response);
   } catch (error) {
@@ -39,7 +39,7 @@ router.get("/reportes/:id", async (request, response) => {
   }
 });
 
-router.get("/reportes/query/id", async (request, response) => {
+router.get("/reportes/query/id", authenticateToken, async (request, response) => {
   try {
     await reporteController.getReporteByIdQuery(request, response);
   } catch (error) {
@@ -47,7 +47,7 @@ router.get("/reportes/query/id", async (request, response) => {
   }
 });
 
-router.put("/reportes/:id", async (request, response) => {
+router.put("/reportes/:id",authenticateToken, async (request, response) => {
   try {
     await reporteController.updateReporte(request, response);
   } catch (error) {
@@ -55,7 +55,7 @@ router.put("/reportes/:id", async (request, response) => {
   }
 });
 
-router.put("/reportes/delete/:id", async (request, response) => {
+router.put("/reportes/delete/:id",authenticateToken, async (request, response) => {
   try {
     await reporteController.deleteReporte(request, response);
   } catch (error) {
@@ -63,7 +63,7 @@ router.put("/reportes/delete/:id", async (request, response) => {
   }
 });
 
-router.put("/reportes/query/delete", async (request, response) => {
+router.put("/reportes/query/delete",authenticateToken, async (request, response) => {
   try {
     await reporteController.deleteReporteQuery(request, response);
   } catch (error) {

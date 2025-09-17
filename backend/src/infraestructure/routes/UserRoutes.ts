@@ -38,7 +38,7 @@ router.get("/users", authenticateToken, async (request, response) => {
     }
 });
 
-router.get("/users/:id", async (request, response) => {
+router.get("/users/:id",authenticateToken, async (request, response) => {
     try {
         await userController.getUserById(request, response);
     } catch (error) {
@@ -46,7 +46,7 @@ router.get("/users/:id", async (request, response) => {
     }
 });
 
-router.get("/users/email/:email", async (request, response) => {
+router.get("/users/email/:email",authenticateToken, async (request, response) => {
     try {
         await userController.getUserByEmail(request, response);
     } catch (error) {
@@ -54,7 +54,7 @@ router.get("/users/email/:email", async (request, response) => {
     }
 });
 
-router.put("/users/:id", async (request, response) => {
+router.put("/users/:id",authenticateToken, async (request, response) => {
     try {
         await userController.updateUser(request, response);
     } catch (error) {
@@ -62,7 +62,7 @@ router.put("/users/:id", async (request, response) => {
     }
 });
 
-router.put("/users/delete/:id", async (request, response) => {
+router.put("/users/delete/:id",authenticateToken, async (request, response) => {
     try {
         await userController.deleteUser(request, response);
     } catch (error) {
@@ -70,7 +70,7 @@ router.put("/users/delete/:id", async (request, response) => {
     }
 });
 
-router.get("/users/query/id", async (request, response) => {
+router.get("/users/query/id", authenticateToken, async (request, response) => {
     try {
         await userController.getUserByIdQuery(request, response);
     } catch (error) {
@@ -80,7 +80,7 @@ router.get("/users/query/id", async (request, response) => {
     }
 });
 
-router.get("/users/query/email", async (request, response) => {
+router.get("/users/query/email", authenticateToken, async (request, response) => {
     try {
         await userController.getUserByEmailQuery(request, response);
     } catch (error) {
@@ -90,7 +90,7 @@ router.get("/users/query/email", async (request, response) => {
     }
 });
 
-router.put("/users/query/delete", async (request, response) => {
+router.put("/users/query/delete", authenticateToken, async (request, response) => {
     try {
         return await userController.deleteUserQuery(request, response);
     } catch (error) {

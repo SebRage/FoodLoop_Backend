@@ -14,24 +14,44 @@ const auditoriaAdapter = new AuditoriaAdapter();
 const auditoriaApp = new AuditoriaApplication(auditoriaAdapter);
 const publicacionController = new PublicacionController(publicacionApp, auditoriaApp);
 
-router.post("/publicaciones", authenticateToken, async (req, res) => {
-  await publicacionController.createPublicacion(req, res);
+router.post("/publicaciones", authenticateToken, async (request, response) => {
+  try {
+    await publicacionController.createPublicacion(request, response);
+  } catch (error) {
+    response.status(400).json({ message: "Error al crear publicación" });
+  }
 });
 
-router.get("/publicaciones", async (req, res) => {
-  await publicacionController.getAllPublicaciones(req, res);
+router.get("/publicaciones", authenticateToken, async (request, response) => {
+  try {
+    await publicacionController.getAllPublicaciones(request, response);
+  } catch (error) {
+    response.status(400).json({ message: "Error al obtener publicaciones" });
+  }
 });
 
-router.get("/publicaciones/:id", async (req, res) => {
-  await publicacionController.getPublicacionById(req, res);
+router.get("/publicaciones/:id", authenticateToken, async (request, response) => {
+  try {
+    await publicacionController.getPublicacionById(request, response);
+  } catch (error) {
+    response.status(400).json({ message: "Error al obtener publicación" });
+  }
 });
 
-router.put("/publicaciones/:id", authenticateToken, async (req, res) => {
-  await publicacionController.updatePublicacion(req, res);
+router.put("/publicaciones/:id", authenticateToken, async (request, response) => {
+  try {
+    await publicacionController.updatePublicacion(request, response);
+  } catch (error) {
+    response.status(400).json({ message: "Error al actualizar publicación" });
+  }
 });
 
-router.put("/publicaciones/delete/:id", authenticateToken, async (req, res) => {
-  await publicacionController.deletePublicacion(req, res);
+router.put("/publicaciones/delete/:id", authenticateToken, async (request, response) => {
+  try {
+    await publicacionController.deletePublicacion(request, response);
+  } catch (error) {
+    response.status(400).json({ message: "Error al eliminar publicación" });
+  }
 });
 
 export default router;

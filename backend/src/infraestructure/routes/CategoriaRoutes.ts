@@ -15,24 +15,44 @@ const auditoriaApp = new AuditoriaApplication(auditoriaAdapter);
 
 const categoriaController = new CategoriaController(categoriaApp, auditoriaApp);
 
-router.post("/categorias", authenticateToken, async (req, res) => {
-  await categoriaController.createCategoria(req, res);
+router.post("/categorias", authenticateToken, async (request, response) => {
+  try {
+    await categoriaController.createCategoria(request, response);
+  } catch (error) {
+    response.status(400).json({ message: "Error al crear categoría" });
+  }
 });
 
-router.get("/categorias", async (req, res) => {
-  await categoriaController.getAllCategorias(req, res);
+router.get("/categorias",authenticateToken, async (request, response) => {
+  try {
+    await categoriaController.getAllCategorias(request, response);
+  } catch (error) {
+    response.status(400).json({ message: "Error al obtener categorías" });
+  }
 });
 
-router.get("/categorias/:id", async (req, res) => {
-  await categoriaController.getCategoriaById(req, res);
+router.get("/categorias/:id",authenticateToken, async (request, response) => {
+  try {
+    await categoriaController.getCategoriaById(request, response);
+  } catch (error) {
+    response.status(400).json({ message: "Error al obtener categoría" });
+  }
 });
 
-router.put("/categorias/:id", authenticateToken, async (req, res) => {
-  await categoriaController.updateCategoria(req, res);
+router.put("/categorias/:id", authenticateToken, async (request, response) => {
+  try {
+    await categoriaController.updateCategoria(request, response);
+  } catch (error) {
+    response.status(400).json({ message: "Error al actualizar categoría" });
+  }
 });
 
-router.put("/categorias/delete/:id", authenticateToken, async (req, res) => {
-  await categoriaController.deleteCategoria(req, res);
+router.put("/categorias/delete/:id", authenticateToken, async (request, response) => {
+  try {
+    await categoriaController.deleteCategoria(request, response);
+  } catch (error) {
+    response.status(400).json({ message: "Error al eliminar categoría" });
+  }
 });
 
 export default router;

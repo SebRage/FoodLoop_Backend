@@ -2,5 +2,5 @@ projectKey=FoodLoop_Backend
 serverUrl=http://localhost:9000
 serverVersion=25.9.0.112764
 dashboardUrl=http://localhost:9000/dashboard?id=FoodLoop_Backend
-ceTaskId=2b425517-16b5-4034-bc9b-5e3a848420a4
-ceTaskUrl=http://localhost:9000/api/ce/task?id=2b425517-16b5-4034-bc9b-5e3a848420a4
+ceTaskId=4405955f-6e12-42fe-89b0-fcbd2fe4e54b
+ceTaskUrl=http://localhost:9000/api/ce/task?id=4405955f-6e12-42fe-89b0-fcbd2fe4e54b
