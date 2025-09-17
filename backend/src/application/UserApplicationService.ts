@@ -25,6 +25,22 @@ export class UserApplicationService {
         return token;
     }
 
+    async loginWithUserData(correo: string, password: string): Promise<{ token: string, user: User }> {
+        const existingUser = await this.port.getUserByEmail(correo);
+        if (!existingUser) {
+            throw new Error("Credentials are Invalid");
+        }
+        const passwordMatch = await bcrypt.compare(password, existingUser.password);
+        if (!passwordMatch) {
+            throw new Error("Credentials are Invalid");
+        }
+        const token = AuthApplication.generateToken({
+            id: existingUser.id,
+            email: existingUser.correo
+        });
+        return { token, user: existingUser };
+    }
+
     async createUser(user: Omit<User, "id">): Promise<number> {
         const existingUser = await this.port.getUserByEmail(user.correo);
         if (!existingUser) {

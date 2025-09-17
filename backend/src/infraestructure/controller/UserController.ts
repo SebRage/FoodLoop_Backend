@@ -27,8 +27,16 @@ export class UserController {
           .json({ error: "Email y contraseña son requeridos" });
       }
 
-      const token = await this.app.login(email, password);
-      return response.status(200).json({ token });
+      const { token, user } = await this.app.loginWithUserData(email, password);
+      return response.status(200).json({ 
+        token, 
+        user: {
+          id: user.id,
+          estado: user.estado,
+          nombreEntidad: user.nombreEntidad,
+          correo: user.correo
+        }
+      });
     } catch (error: any) {
       console.error("login error:", error);
       return response.status(401).json({ message: "Invalid Credentials" });
@@ -57,7 +65,7 @@ export class UserController {
 
       const status = 1;
       const user: Omit<User, "id"> = {
-        tipoEntidad: request.body.tipoEntidad ?? "Individual",
+        tipoEntidad: request.body.tipoEntidad ?? "",
         nombreEntidad: name,
         correo: email,
         telefono: request.body.telefono ?? "",
@@ -250,15 +258,15 @@ export class UserController {
       let { name, email, password, status } = request.body;
 
       // Validaciones antes de actualizar
-      if (name && !/^[a-zA-Z\s]{3,}$/.test(name.trim()))
+      if (NAME_REGEX.test(name.trim()))
         return response.status(400).json({
           message: "El nombre debe tener al menos 3 caracteres y solo contener letras",
         });
 
-      if (email && !EMAIL_REGEX.test(email.trim()))
+      if (EMAIL_REGEX.test(email.trim()))
         return response.status(400).json({ message: "Correo electrónico no válido" });
 
-      if (password && !/^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{6,}$/.test(password.trim()))
+      if (PASSWORD_REGEX.test(password.trim()))
         return response.status(400).json({
           message:
             "La contraseña debe tener al menos 6 caracteres, incluyendo al menos una letra y un número",

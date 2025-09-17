@@ -22,6 +22,14 @@ router.post("/login", async (request, response) => {
     await userController.login(request, response);
 });
 
+router.post("/register", async (request, response) => {
+    try {
+        await userController.registerUser(request, response);
+    } catch (error) {
+        response.status(400).json({ message: "Error al registrar usuario" });
+    }
+});
+
 router.post("/users", authenticateToken, async (request, response) => {
     try {
         await userController.registerUser(request, response);
