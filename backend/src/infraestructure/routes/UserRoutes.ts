@@ -18,11 +18,11 @@ const auditoriaApp = new AuditoriaApplication(auditoriaAdapter);
 
 const userController = new UserController(userApp, auditoriaApp);
 
-router.post("/login", async (request, response) => {
+router.post("/login", authenticateToken, async (request, response) => {
     await userController.login(request, response);
 });
 
-router.post("/register", async (request, response) => {
+router.post("/register", authenticateToken, async (request, response) => {
     try {
         await userController.registerUser(request, response);
     } catch (error) {
@@ -30,13 +30,6 @@ router.post("/register", async (request, response) => {
     }
 });
 
-router.post("/users", authenticateToken, async (request, response) => {
-    try {
-        await userController.registerUser(request, response);
-    } catch (error) {
-        response.status(400).json({ message: "Error al obtener datos" });
-    }
-});
 
 router.get("/users", authenticateToken, async (request, response) => {
     try {
@@ -46,7 +39,7 @@ router.get("/users", authenticateToken, async (request, response) => {
     }
 });
 
-router.get("/users/:id",authenticateToken, async (request, response) => {
+router.get("/users/:id", authenticateToken, async (request, response) => {
     try {
         await userController.getUserById(request, response);
     } catch (error) {
@@ -54,7 +47,7 @@ router.get("/users/:id",authenticateToken, async (request, response) => {
     }
 });
 
-router.get("/users/email/:email",authenticateToken, async (request, response) => {
+router.get("/users/email/:email", authenticateToken, async (request, response) => {
     try {
         await userController.getUserByEmail(request, response);
     } catch (error) {
@@ -62,7 +55,7 @@ router.get("/users/email/:email",authenticateToken, async (request, response) =>
     }
 });
 
-router.put("/users/:id",authenticateToken, async (request, response) => {
+router.put("/users/:id", authenticateToken, async (request, response) => {
     try {
         await userController.updateUser(request, response);
     } catch (error) {
@@ -70,7 +63,7 @@ router.put("/users/:id",authenticateToken, async (request, response) => {
     }
 });
 
-router.put("/users/delete/:id",authenticateToken, async (request, response) => {
+router.put("/users/delete/:id", authenticateToken, async (request, response) => {
     try {
         await userController.deleteUser(request, response);
     } catch (error) {

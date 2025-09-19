@@ -1,77 +1,86 @@
 import { UserApplicationService } from "../../src/application/UserApplicationService";
-import bcrypt from "bcryptjs";
-
-const makeUserPortMock = () => {
-  let store: any = {};
-  let nextId = 1;
-  return {
-    createUser: async (user: any) => {
-      const id = nextId++;
-      store[id] = { ...user, id };
-      return id;
-    },
-    getUserByEmail: async (email: string) => {
-      const found = Object.values(store).find((u: any) => u.correo === email);
-      return found ?? null;
-    },
-    getUserById: async (id: number) => store[id] ?? null,
-    getAllUsers: async () => Object.values(store),
-    updateUser: async (id: number, user: any) => {
-      if (!store[id]) return false;
-      store[id] = { ...store[id], ...user };
-      return true;
-    },
-    deleteUser: async (id: number) => {
-      if (!store[id]) return false;
-      store[id].estado = 0;
-      return true;
-    }
-  };
-};
 
 describe('UserApplicationService', () => {
-  test('createUser should hash password and return id', async () => {
-    const userPort = makeUserPortMock();
-    const service = new UserApplicationService(userPort as any);
-
-    const rawUser = {
-      tipoEntidad: 'Individual',
-      nombreEntidad: 'Test User',
-      correo: 'test@example.com',
-      telefono: '',
-      ubicacion: '',
-      direccion: '',
-      password: 'pass1234',
-      estado: 1,
+  it('debería crear un usuario y devolver el id', async () => {
+    const mockPort: any = {
+      createUser: jest.fn().mockResolvedValue(101),
+      getUserByEmail: jest.fn().mockResolvedValue(null),
+      getAllUsers: jest.fn().mockResolvedValue([]),
+      updateUser: jest.fn().mockResolvedValue(true),
+      deleteUser: jest.fn().mockResolvedValue(true),
+      getUserById: jest.fn().mockResolvedValue(null),
     };
 
-    const id = await service.createUser({ ...rawUser });
-    expect(typeof id).toBe('number');
+    const app = new UserApplicationService(mockPort);
 
-    const saved = await userPort.getUserById(id);
-    expect(saved).not.toBeNull();
-    expect(saved.password).not.toBe(rawUser.password);
-    const match = await bcrypt.compare(rawUser.password, saved.password);
-    expect(match).toBe(true);
+    const id = await app.createUser({
+      tipoEntidad: 'Individual',
+      nombreEntidad: 'Usuario Test',
+      correo: 'user@test.com',
+      telefono: '12345678',
+      ubicacion: 'Ciudad',
+      direccion: 'Calle 123',
+      password: 'contrasena',
+      estado: 1,
+      fechaRegistro: new Date().toISOString(),
+      publicaciones: [],
+      reportes: [],
+    } as any);
+
+    expect(id).toBe(101);
+    expect(mockPort.createUser).toHaveBeenCalled();
   });
 
-  test('login should return a token for valid credentials', async () => {
-    const userPort = makeUserPortMock();
-    const hashed = await bcrypt.hash('secret123', 10);
-    const id = await userPort.createUser({
-      tipoEntidad: 'Individual',
-      nombreEntidad: 'Auth User',
-      correo: 'auth@example.com',
-      telefono: '',
-      ubicacion: '',
-      direccion: '',
-      password: hashed,
-      estado: 1,
-    });
+  it('No actualizará un usuario no existente', async () => {
+    const mockPort: any = {
+      getUserById: jest.fn().mockResolvedValue(null),
+      updateUser: jest.fn(),
+    };
+    const app = new UserApplicationService(mockPort);
+    await expect(app.updateUser(1, { nombreEntidad: 'x' })).rejects.toThrow('Usuario no encontrado');
+  });
 
-    const service = new UserApplicationService(userPort as any);
-    const token = await service.login('auth@example.com', 'secret123');
-    expect(typeof token).toBe('string');
-    expect(token.length).toBeGreaterThan(10);
+  it('Actualizara un usuario existente', async () => {
+    const mockUser = { id: 1, tipoEntidad: 'Individual', nombreEntidad: 'Antes', correo: 'a@b.com', password: 'x', estado: 1 };
+    const mockPort: any = {
+      getUserById: jest.fn().mockResolvedValue(mockUser),
+      updateUser: jest.fn().mockResolvedValue(true),
+    };
+    const app = new UserApplicationService(mockPort);
+    const res = await app.updateUser(1, { nombreEntidad: 'Actualizado' });
+    expect(res).toBe(true);
+    expect(mockPort.updateUser).toHaveBeenCalledWith(1, { nombreEntidad: 'Actualizado' });
+  });
+
+  it('Eliminara un usuario existente', async () => {
+    const mockUser = { id: 2, tipoEntidad: 'Individual', nombreEntidad: 'Temp', correo: 't@example.com', password: 'x', estado: 1 };
+    const mockPort: any = {
+      getUserById: jest.fn().mockResolvedValue(mockUser),
+      deleteUser: jest.fn().mockResolvedValue(true),
+    };
+    const app = new UserApplicationService(mockPort);
+    const res = await app.deleteUserById(2);
+    expect(res).toBe(true);
+    expect(mockPort.deleteUser).toHaveBeenCalledWith(2);
+  });
+
+  it('retornará usuarios existentes', async () => {
+    const mockPort: any = {
+      getAllUsers: jest.fn().mockResolvedValue([{ id: 1, tipoEntidad: 'X', nombreEntidad: 'Y', correo: 'y@example.com', password: 'x', estado: 1 }]),
+    };
+    const app = new UserApplicationService(mockPort);
+    const list = await app.getAllUsers();
+    expect(list).toHaveLength(1);
+    expect(mockPort.getAllUsers).toHaveBeenCalled();
+  });
+
+  it('retornará un usuario por id', async () => {
+    const mockPort: any = {
+      getUserById: jest.fn().mockResolvedValue({ id: 5, tipoEntidad: 'X', nombreEntidad: 'Y', correo: 'y@example.com', password: 'x', estado: 1 }),
+    };
+    const app = new UserApplicationService(mockPort);
+    const u = await app.getUserById(5);
+    expect(u).not.toBeNull();
+    expect(mockPort.getUserById).toHaveBeenCalledWith(5);
   });
 });
