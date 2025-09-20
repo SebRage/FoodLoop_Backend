@@ -292,31 +292,58 @@ export class UserController {
         return response.status(400).json({ message: "Error en parámetro" });
       }
 
-      let { name, email, password, status } = request.body;
+  // Aceptar claves tanto en español como en inglés y hacerlas opcionales
+  // name | nombreEntidad, email | correo, status | estado, tipoEntidad | tipo_entidad, telefono | phone, direccion | address, ubicacion | location, password opcional
+      const rawName = (request.body.nombreEntidad ?? request.body.name) as string | undefined;
+      const rawEmail = (request.body.correo ?? request.body.email) as string | undefined;
+      const rawPassword = (request.body.password) as string | undefined;
+      const rawStatus = (request.body.estado ?? request.body.status) as number | string | undefined;
+      const rawTipoEntidad = (request.body.tipoEntidad ?? request.body.tipo_entidad) as string | undefined;
+  const rawTelefono = (request.body.telefono ?? request.body.phone) as string | undefined;
+  const rawDireccion = (request.body.direccion ?? request.body.address) as string | undefined;
+  const rawUbicacion = (request.body.ubicacion ?? request.body.location) as string | undefined;
 
-      // Validaciones antes de actualizar
-      if (NAME_REGEX.test(name.trim()))
-        return response.status(400).json({
-          message: "El nombre debe tener al menos 3 caracteres y solo contener letras",
-        });
+      // Validaciones (solo si vienen presentes)
+      if (typeof rawName === 'string') {
+        const name = rawName.trim();
+        if (!NAME_REGEX.test(name)) {
+          return response.status(400).json({
+            message: "El nombre debe tener al menos 3 caracteres y solo contener letras y caracteres permitidos",
+          });
+        }
+      }
 
-      if (EMAIL_REGEX.test(email.trim()))
-        return response.status(400).json({ message: "Correo electrónico no válido" });
+      if (typeof rawEmail === 'string') {
+        const email = rawEmail.trim();
+        if (!EMAIL_REGEX.test(email)) {
+          return response.status(400).json({ message: "Correo electrónico no válido" });
+        }
+      }
 
-      if (PASSWORD_REGEX.test(password.trim()))
-        return response.status(400).json({
-          message:
-            "La contraseña debe tener al menos 6 caracteres, incluyendo al menos una letra y un número",
-        });
+      if (typeof rawPassword === 'string') {
+        const password = rawPassword.trim();
+        if (!PASSWORD_REGEX.test(password)) {
+          return response.status(400).json({
+            message: "La contraseña debe tener al menos 8 caracteres y máximo 25, incluyendo al menos una letra y un número",
+          });
+        }
+      }
 
-      // Forzar status por defecto y mapear "name" a "nombreEntidad"
-      status = 1;
-      const updated = await this.app.updateUser(id, {
-        nombreEntidad: name,
-        correo: email,
-        password,
-        estado: status,
-      });
+  const updatePayload: Partial<User> = {};
+      if (typeof rawName === 'string') updatePayload.nombreEntidad = rawName.trim();
+      if (typeof rawEmail === 'string') updatePayload.correo = rawEmail.trim();
+      if (typeof rawPassword === 'string') updatePayload.password = rawPassword.trim();
+      if (typeof rawStatus !== 'undefined') updatePayload.estado = Number(rawStatus);
+      if (typeof rawTipoEntidad === 'string') updatePayload.tipoEntidad = rawTipoEntidad.trim();
+  if (typeof rawTelefono === 'string') updatePayload.telefono = rawTelefono.trim();
+  if (typeof rawDireccion === 'string') updatePayload.direccion = rawDireccion.trim();
+  if (typeof rawUbicacion === 'string') updatePayload.ubicacion = rawUbicacion.trim();
+
+      if (Object.keys(updatePayload).length === 0) {
+        return response.status(400).json({ message: "No hay campos para actualizar" });
+      }
+
+      const updated = await this.app.updateUser(id, updatePayload);
       if (!updated) {
         return response.status(404).json({
           message: "Usuario no encontrado o error al actualizar",
@@ -342,7 +369,15 @@ export class UserController {
       }
 
       return response.status(200).json({ message: "Usuario actualizado con éxito" });
-    } catch (error) {
+    } catch (error: any) {
+      const msg = String(error?.message || "");
+      if (msg.includes("ya está en uso")) {
+        return response.status(409).json({ message: "Ese email ya está en uso" });
+      }
+      if (msg.includes("Usuario no encontrado")) {
+        return response.status(404).json({ message: "Usuario no encontrado" });
+      }
+      console.error("updateUser error:", error);
       return response.status(500).json({ message: "Error en el servidor" });
     }
   }
