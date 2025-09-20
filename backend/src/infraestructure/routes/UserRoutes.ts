@@ -30,7 +30,7 @@ router.post("/register", async (request, response) => {
     }
 });
 
-// Reset de contraseña por email (público)
+
 router.post("/users/reset-password", async (request, response) => {
     try {
         await userController.resetPassword(request, response);
