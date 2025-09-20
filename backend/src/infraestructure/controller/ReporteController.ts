@@ -151,7 +151,11 @@ export class ReporteController {
         return response.status(400).json({ message: "Error en parámetro" });
       }
 
+      // Permitir actualizar: descripcion, estado, reportanteId, publicacionId, fechaReporte
       let { descripcion, estado } = request.body;
+      const reportanteIdRaw = request.body.reportanteId ?? request.body.reportante_id ?? request.body.idReportante ?? request.body.usuarioId;
+      const publicacionIdRaw = request.body.publicacionId ?? request.body.publicacion_id ?? request.body.idPublicacion;
+      const fechaReporteRaw = request.body.fechaReporte ?? request.body.fecha_reporte ?? request.body.fecha;
 
       if (descripcion !== undefined && typeof descripcion !== "string") {
         return response.status(400).json({ message: "Descripción inválida" });
@@ -161,10 +165,47 @@ export class ReporteController {
         if (isNaN(maybeNum)) return response.status(400).json({ message: "Estado inválido" });
         estado = maybeNum;
       }
+      let reportanteId: number | undefined = undefined;
+      if (reportanteIdRaw !== undefined) {
+        const n = Number(reportanteIdRaw);
+        if (isNaN(n)) return response.status(400).json({ message: "reportanteId inválido" });
+        reportanteId = n;
+      }
+      let publicacionId: number | undefined = undefined;
+      if (publicacionIdRaw !== undefined) {
+        const n = Number(publicacionIdRaw);
+        if (isNaN(n)) return response.status(400).json({ message: "publicacionId inválido" });
+        publicacionId = n;
+      }
+      let fechaReporte: Date | undefined = undefined;
+      if (fechaReporteRaw !== undefined) {
+        try {
+          if (typeof fechaReporteRaw === 'string') {
+            const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(fechaReporteRaw);
+            if (m) {
+              const y = parseInt(m[1], 10), mo = parseInt(m[2], 10) - 1, d = parseInt(m[3], 10);
+              fechaReporte = new Date(y, mo, d, 12, 0, 0);
+            } else {
+              const tmp = new Date(fechaReporteRaw);
+              if (isNaN(tmp.getTime())) return response.status(400).json({ message: "fechaReporte inválida" });
+              fechaReporte = tmp;
+            }
+          } else {
+            const tmp = new Date(fechaReporteRaw);
+            if (isNaN(tmp.getTime())) return response.status(400).json({ message: "fechaReporte inválida" });
+            fechaReporte = tmp;
+          }
+        } catch (e) {
+          return response.status(400).json({ message: "fechaReporte inválida" });
+        }
+      }
 
       const payload: Partial<Reporte> = {};
       if (descripcion !== undefined) payload.descripcion = descripcion;
       if (estado !== undefined) payload.estado = estado as number;
+      if (reportanteId !== undefined) payload.reportanteId = reportanteId;
+      if (publicacionId !== undefined) payload.publicacionId = publicacionId;
+      if (fechaReporte !== undefined) payload.fechaReporte = fechaReporte;
 
       const updated = await this.app.updateReporte(id, payload);
       if (!updated) {
