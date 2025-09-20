@@ -84,4 +84,13 @@ export class UserApplicationService {
     async getAllUsers(): Promise<User[]> {
         return await this.port.getAllUsers();
     }
+
+    async resetPasswordByEmail(correo: string, newPassword: string): Promise<boolean> {
+        const existingUser = await this.port.getUserByEmail(correo);
+        if (!existingUser) {
+            throw new Error("Usuario no encontrado");
+        }
+        const hashed = await bcrypt.hash(newPassword, 10);
+        return await this.port.updateUser(existingUser.id, { password: hashed });
+    }
 }

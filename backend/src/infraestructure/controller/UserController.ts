@@ -14,6 +14,43 @@ export class UserController {
     this.auditoriaApp = auditoriaApp;
   }
 
+  async resetPassword(request: Request, response: Response): Promise<Response> {
+    try {
+      const email = request.body.email ?? request.body.correo;
+      const newPassword = request.body.newPassword ?? request.body.password;
+      if (!email || !newPassword) {
+        return response.status(400).json({ message: "Email y nueva contraseña son requeridos" });
+      }
+      await this.app.resetPasswordByEmail(email, newPassword);
+
+      // Audit best-effort
+      try {
+        if (this.auditoriaApp) {
+          const actorId = (request as any).user?.id ?? undefined;
+          await this.auditoriaApp.createAuditoria({
+            usuarioId: actorId,
+            tablaAfectada: "users",
+            registroId: undefined,
+            accion: "UPDATE",
+            descripcion: `Reset password para ${email}`,
+            estado: 1,
+            fecha: new Date(),
+          });
+        }
+      } catch (err) {
+        console.error("Error creando auditoria (resetPassword):", err);
+      }
+
+      return response.status(200).json({ message: "Contraseña actualizada correctamente" });
+    } catch (error: any) {
+      if (String(error?.message || "").includes("no encontrado")) {
+        return response.status(404).json({ message: "Usuario no encontrado" });
+      }
+      console.error("resetPassword error:", error);
+      return response.status(500).json({ message: "Error en el servidor" });
+    }
+  }
+
   async login(request: Request, response: Response): Promise<Response> {
     try {
       console.log("Login body:", request.body);
