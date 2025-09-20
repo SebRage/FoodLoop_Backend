@@ -18,7 +18,7 @@ const auditoriaApp = new AuditoriaApplication(auditoriaAdapter);
 
 const userController = new UserController(userApp, auditoriaApp);
 
-router.post("/login", authenticateToken, async (request, response) => {
+router.post("/login", async (request, response) => {
     await userController.login(request, response);
 });
 
