@@ -87,7 +87,7 @@ export class UserController {
     const email = request.body.email ?? request.body.correo;
     const password = request.body.password;
 
-    try {
+  try {
       if (!name) return response.status(400).json({ message: "Nombre es requerido" });
       if (!NAME_REGEX.test(name)) return response.status(400).json({ message: "Error en dato" });
 
@@ -112,7 +112,7 @@ export class UserController {
         estado: status,
       };
 
-      const userId = await this.app.createUser(user);
+  const userId = await this.app.createUser(user);
 
       // Create audit record (best-effort, don't block on failure)
       try {
@@ -136,6 +136,10 @@ export class UserController {
         .status(201)
         .json({ message: "Usuario registrado correctamente", userId });
     } catch (error: any) {
+      const msg = String(error?.message || "");
+      if (msg.includes("ya existe")) {
+        return response.status(409).json({ message: "Ese email ya está en uso" });
+      }
       console.error("registerUser error:", error);
       return response.status(500).json({ message: "Error en el servidor", detail: error.message ?? error });
     }
