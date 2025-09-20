@@ -22,7 +22,7 @@ router.post("/login", async (request, response) => {
     await userController.login(request, response);
 });
 
-router.post("/register", authenticateToken, async (request, response) => {
+router.post("/register", async (request, response) => {
     try {
         await userController.registerUser(request, response);
     } catch (error) {
