@@ -102,6 +102,13 @@ export class PublicacionAdapter implements PublicacionPort {
             if (!existing) {
                 throw new Error("Publicación no encontrada");
             }
+            // Permitir cambiar usuario y categoría asociados si se proveen
+            if (publicacion.usuarioId !== undefined) {
+                existing.usuario_id = Number(publicacion.usuarioId);
+            }
+            if (publicacion.categoriaId !== undefined) {
+                existing.categoria_id = Number(publicacion.categoriaId);
+            }
             if (publicacion.titulo !== undefined) {
                 existing.titulo = publicacion.titulo;
             }
@@ -118,16 +125,22 @@ export class PublicacionAdapter implements PublicacionPort {
                 existing.precio = publicacion.precio;
             }
             if (publicacion.fechaCaducidad !== undefined) {
-                existing.fecha_caducidad = publicacion.fechaCaducidad;
+                existing.fecha_caducidad = (publicacion.fechaCaducidad instanceof Date)
+                    ? publicacion.fechaCaducidad
+                    : new Date(publicacion.fechaCaducidad as any);
             }
             if (publicacion.estado !== undefined) {
                 existing.estado = publicacion.estado;
             }
             if (publicacion.fechaCreacion !== undefined) {
-                existing.fecha_creacion = publicacion.fechaCreacion;
+                existing.fecha_creacion = (publicacion.fechaCreacion instanceof Date)
+                    ? publicacion.fechaCreacion
+                    : new Date(publicacion.fechaCreacion as any);
             }
             if (publicacion.fechaActualizacion !== undefined) {
-                existing.fecha_actualizacion = publicacion.fechaActualizacion;
+                existing.fecha_actualizacion = (publicacion.fechaActualizacion instanceof Date)
+                    ? publicacion.fechaActualizacion
+                    : new Date(publicacion.fechaActualizacion as any);
             }
             await this.publicacionRepository.save(existing);
             return true;
