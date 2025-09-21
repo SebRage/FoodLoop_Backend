@@ -125,9 +125,26 @@ export class PublicacionAdapter implements PublicacionPort {
                 existing.precio = publicacion.precio;
             }
             if (publicacion.fechaCaducidad !== undefined) {
-                existing.fecha_caducidad = (publicacion.fechaCaducidad instanceof Date)
-                    ? publicacion.fechaCaducidad
-                    : new Date(publicacion.fechaCaducidad as any);
+                if (publicacion.fechaCaducidad instanceof Date) {
+                    existing.fecha_caducidad = publicacion.fechaCaducidad;
+                } else if (typeof publicacion.fechaCaducidad === 'string') {
+                    const s = publicacion.fechaCaducidad as string;
+                    const parts = s.split('-');
+                    if (parts.length === 3) {
+                        const y = parseInt(parts[0], 10);
+                        const m = parseInt(parts[1], 10);
+                        const d = parseInt(parts[2], 10);
+                        if (!isNaN(y) && !isNaN(m) && !isNaN(d)) {
+                            existing.fecha_caducidad = new Date(y, m - 1, d);
+                        } else {
+                            existing.fecha_caducidad = new Date(s);
+                        }
+                    } else {
+                        existing.fecha_caducidad = new Date(s);
+                    }
+                } else {
+                    existing.fecha_caducidad = new Date(publicacion.fechaCaducidad as any);
+                }
             }
             if (publicacion.estado !== undefined) {
                 existing.estado = publicacion.estado;

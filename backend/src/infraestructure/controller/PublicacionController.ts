@@ -15,6 +15,19 @@ export class PublicacionController {
 	async createPublicacion(request: Request, response: Response): Promise<Response> {
 		try {
 			const body = request.body;
+			// Parse fechaCaducidad como fecha local (YYYY-MM-DD) para evitar offset de zona horaria
+			const toLocalDate = (isoYmd?: string): Date => {
+				if (!isoYmd) return new Date();
+				try {
+					const [y, m, d] = String(isoYmd).split('-').map((v) => parseInt(v, 10));
+					if (!isNaN(y) && !isNaN(m) && !isNaN(d)) {
+						return new Date(y, m - 1, d);
+					}
+				} catch {}
+				// Fallback
+				return new Date(isoYmd);
+			};
+
 			const pub: Omit<Publicacion, "id"> = {
 				usuarioId: Number(body.usuarioId),
 				categoriaId: Number(body.categoriaId),
@@ -23,7 +36,7 @@ export class PublicacionController {
 				tipo: body.tipo,
 				cantidad: body.cantidad,
 				precio: Number(body.precio ?? 0),
-				fechaCaducidad: body.fechaCaducidad ? new Date(body.fechaCaducidad) : new Date(),
+				fechaCaducidad: toLocalDate(body.fechaCaducidad),
 				estado: 1,
 				fechaCreacion: new Date(),
 				fechaActualizacion: new Date(),
