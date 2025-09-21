@@ -62,6 +62,11 @@ export class UserApplicationService {
                 throw new Error("Ese email ya está en uso");
             }
         }
+        // Hash password if present
+        if (typeof user.password === 'string' && user.password.trim().length > 0) {
+            const hashed = await bcrypt.hash(user.password.trim(), 10);
+            user.password = hashed;
+        }
         return await this.port.updateUser(id, user);
     }
 

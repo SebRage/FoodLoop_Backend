@@ -6,6 +6,7 @@ import categoriaRoutes from "../routes/CategoriaRoutes";
 import publicacionRoutes from "../routes/PublicacionRoutes";
 import transaccionRoutes from "../routes/TransaccionRoutes";
 import cors from "cors";
+import { auditLogger } from "./auditMiddleware";
 class App {
   private app!: express.Application;
 
@@ -25,6 +26,8 @@ class App {
     }));
     // No necesitamos app.options() global; CORS middleware ya maneja preflight automáticamente
     this.app.use(express.json())
+    // Audit every request (after JSON parsing so we can inspect body)
+    this.app.use(auditLogger)
   }
 
   private routes(): void {
