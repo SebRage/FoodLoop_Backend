@@ -6,8 +6,7 @@ import { AppDataSource } from "../config/data-base";
 import { Repository } from "typeorm";
 let DateTime: any = null;
 try {
-    // require en runtime para evitar errores si la dependencia no está instalada en tiempo de compilación
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
+   
     DateTime = require('luxon').DateTime;
 } catch (e) {
     DateTime = null;
@@ -20,16 +19,14 @@ export class UserAdapter implements UserPort {
         this.userRepository = AppDataSource.getRepository(UserEntity);
     }
 
-    // Convertir entidad de persistencia a dominio
     private toDomain(user: UserEntity): UserDomain {
-        // mapear entidad a dominio y devolver la fecha formateada
         // usar luxon si está disponible para formatear con zona Bogotá
         let formatted: string | undefined = undefined;
         try {
             if (DateTime && user.fecha_registro) {
                 formatted = DateTime.fromJSDate(user.fecha_registro).setZone('America/Bogota').toFormat('yyyy-MM-dd h:mm:ssa').toLowerCase();
             } else if (user.fecha_registro) {
-                // fallback manual
+               
                 const d = new Date(user.fecha_registro);
                 const pad = (n: number) => n.toString().padStart(2, '0');
                 // ajustar a Bogotá
@@ -55,7 +52,7 @@ export class UserAdapter implements UserPort {
             password: user.password,
             estado: user.estado,
             fechaRegistro: formatted,
-            // Relaciones opcionales
+          
             publicaciones: user.publicaciones ? user.publicaciones.map(p => ({
                 id: p.id_publicacion,
                 usuarioId: p.usuario_id,
@@ -81,7 +78,7 @@ export class UserAdapter implements UserPort {
         };
     }
 
-    // Convertir datos de dominio en entidad de persistencia
+    
     private toEntity(user: Omit<User, "id">): UserEntity {
         const userEntity = new UserEntity();
         userEntity.tipo_entidad = user.tipoEntidad;
@@ -164,7 +161,6 @@ export class UserAdapter implements UserPort {
             if (!existingUser) {
                 throw new Error("Usuario no encontrado");
             }
-            // Actualizamos las propiedades enviadas, manteniendo los valores existentes si son undefined
             Object.assign(existingUser, {
                 tipo_entidad: user.tipoEntidad ?? existingUser.tipo_entidad,
                 nombre_entidad: user.nombreEntidad ?? existingUser.nombre_entidad,

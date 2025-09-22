@@ -82,7 +82,6 @@ export class CategoriaAdapter implements CategoriaPort {
             if (!existing) {
                 throw new Error("Categoría no encontrada");
             }
-            // Marca la categoría como inactiva
             existing.estado = 0;
             await this.categoriaRepository.save(existing);
             return true;

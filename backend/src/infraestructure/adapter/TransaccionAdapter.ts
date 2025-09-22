@@ -19,7 +19,7 @@ export class TransaccionAdapter implements TransaccionPort {
             beneficiarioCompradorId: entity.beneficiario_comprador_id,
             estado: entity.estado,
             fechaTransaccion: entity.fecha_transaccion,
-            // Relaciones opcionales
+            
             ...(entity.donante ? { donante: {
                 id: entity.donante.id_usuario,
                 tipoEntidad: entity.donante.tipo_entidad,

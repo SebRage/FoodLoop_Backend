@@ -65,8 +65,8 @@ export class UserController {
       }
 
       const { token, user } = await this.app.loginWithUserData(email, password);
-      return response.status(200).json({ 
-        token, 
+      return response.status(200).json({
+        token,
         user: {
           id: user.id,
           estado: user.estado,
@@ -87,7 +87,7 @@ export class UserController {
     const email = request.body.email ?? request.body.correo;
     const password = request.body.password;
 
-  try {
+    try {
       if (!name) return response.status(400).json({ message: "Nombre es requerido" });
       if (!NAME_REGEX.test(name)) return response.status(400).json({ message: "Error en dato" });
 
@@ -112,7 +112,7 @@ export class UserController {
         estado: status,
       };
 
-  const userId = await this.app.createUser(user);
+      const userId = await this.app.createUser(user);
 
       // Create audit record (best-effort, don't block on failure)
       try {
@@ -265,7 +265,7 @@ export class UserController {
         return response.status(404).json({ message: "Usuario no encontrado" });
       }
 
-      // Audit for query-delete as well
+
       try {
         if (this.auditoriaApp) {
           const actorId = (request as any).user?.id ?? undefined;
@@ -274,7 +274,7 @@ export class UserController {
             tablaAfectada: "users",
             registroId: id,
             accion: "DELETE",
-            descripcion: `Usuario dado de baja con id ${id} (query)` ,
+            descripcion: `Usuario dado de baja con id ${id} (query)`,
             estado: 1,
             fecha: new Date(),
           });
@@ -296,18 +296,18 @@ export class UserController {
         return response.status(400).json({ message: "Error en parámetro" });
       }
 
-  // Aceptar claves tanto en español como en inglés y hacerlas opcionales
-  // name | nombreEntidad, email | correo, status | estado, tipoEntidad | tipo_entidad, telefono | phone, direccion | address, ubicacion | location, password opcional
+
+
       const rawName = (request.body.nombreEntidad ?? request.body.name) as string | undefined;
       const rawEmail = (request.body.correo ?? request.body.email) as string | undefined;
       const rawPassword = (request.body.password) as string | undefined;
       const rawStatus = (request.body.estado ?? request.body.status) as number | string | undefined;
       const rawTipoEntidad = (request.body.tipoEntidad ?? request.body.tipo_entidad) as string | undefined;
-  const rawTelefono = (request.body.telefono ?? request.body.phone) as string | undefined;
-  const rawDireccion = (request.body.direccion ?? request.body.address) as string | undefined;
-  const rawUbicacion = (request.body.ubicacion ?? request.body.location) as string | undefined;
+      const rawTelefono = (request.body.telefono ?? request.body.phone) as string | undefined;
+      const rawDireccion = (request.body.direccion ?? request.body.address) as string | undefined;
+      const rawUbicacion = (request.body.ubicacion ?? request.body.location) as string | undefined;
 
-      // Validaciones (solo si vienen presentes)
+      // Validaciones 
       if (typeof rawName === 'string') {
         const name = rawName.trim();
         if (!NAME_REGEX.test(name)) {
@@ -333,15 +333,15 @@ export class UserController {
         }
       }
 
-  const updatePayload: Partial<User> = {};
+      const updatePayload: Partial<User> = {};
       if (typeof rawName === 'string') updatePayload.nombreEntidad = rawName.trim();
       if (typeof rawEmail === 'string') updatePayload.correo = rawEmail.trim();
       if (typeof rawPassword === 'string') updatePayload.password = rawPassword.trim();
       if (typeof rawStatus !== 'undefined') updatePayload.estado = Number(rawStatus);
       if (typeof rawTipoEntidad === 'string') updatePayload.tipoEntidad = rawTipoEntidad.trim();
-  if (typeof rawTelefono === 'string') updatePayload.telefono = rawTelefono.trim();
-  if (typeof rawDireccion === 'string') updatePayload.direccion = rawDireccion.trim();
-  if (typeof rawUbicacion === 'string') updatePayload.ubicacion = rawUbicacion.trim();
+      if (typeof rawTelefono === 'string') updatePayload.telefono = rawTelefono.trim();
+      if (typeof rawDireccion === 'string') updatePayload.direccion = rawDireccion.trim();
+      if (typeof rawUbicacion === 'string') updatePayload.ubicacion = rawUbicacion.trim();
 
       if (Object.keys(updatePayload).length === 0) {
         return response.status(400).json({ message: "No hay campos para actualizar" });
@@ -354,7 +354,7 @@ export class UserController {
         });
       }
 
-      // Audit
+      
       try {
         if (this.auditoriaApp) {
           const actorId = (request as any).user?.id ?? undefined;

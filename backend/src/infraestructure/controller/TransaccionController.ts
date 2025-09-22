@@ -22,7 +22,7 @@ export class TransaccionController {
 			if (!isFinite(pubIdNum)) {
 				return response.status(400).json({ message: "publicacionId inválido" });
 			}
-			// Validar que la publicación exista y esté activa (estado === 1)
+			
 			try {
 				if (this.publicacionApp) {
 					const pub = await this.publicacionApp.getPublicacionById(pubIdNum);
@@ -33,7 +33,7 @@ export class TransaccionController {
 				console.error("Error validando publicación en createTransaccion:", err);
 				return response.status(500).json({ message: "Error al validar publicación" });
 			}
-			// Normalizar fechaTransaccion: aceptar 'YYYY-MM-DD' y convertir a mediodía local
+			
 			let fechaTransaccion: Date = new Date();
 			if (b.fechaTransaccion !== undefined) {
 				try {
@@ -84,9 +84,8 @@ export class TransaccionController {
 				}
 			} catch (err) {
 				console.error("Error pausando publicación en createTransaccion:", err);
-				// No revertimos la transacción creada, pero reportamos el fallo de pausa
 			}
-			// Audit
+			// Audit transacción creada
 			try {
 				if (this.auditoriaApp) {
 					const actorId = (request as any).user?.id ?? undefined;
@@ -138,7 +137,7 @@ export class TransaccionController {
 			const id = parseInt(request.params.id);
 			if (isNaN(id)) return response.status(400).json({ message: "Id inválido" });
 			const body = request.body || {};
-			// Normalizar fechaTransaccion si viene como 'YYYY-MM-DD'
+			
 			if (body.fechaTransaccion !== undefined && typeof body.fechaTransaccion === 'string') {
 				const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(body.fechaTransaccion);
 				if (m) {
@@ -148,7 +147,7 @@ export class TransaccionController {
 			}
 			const updated = await this.app.updateTransaccion(id, body);
 			if (!updated) return response.status(404).json({ message: "No encontrada" });
-			// Audit
+			
 			try {
 				if (this.auditoriaApp) {
 					const actorId = (request as any).user?.id ?? undefined;
@@ -178,7 +177,7 @@ export class TransaccionController {
 			if (isNaN(id)) return response.status(400).json({ message: "Id inválido" });
 			const deleted = await this.app.deleteTransaccion(id);
 			if (!deleted) return response.status(404).json({ message: "No encontrada" });
-			// Audit
+			
 			try {
 				if (this.auditoriaApp) {
 					const actorId = (request as any).user?.id ?? undefined;

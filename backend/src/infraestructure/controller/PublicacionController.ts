@@ -15,7 +15,7 @@ export class PublicacionController {
 	async createPublicacion(request: Request, response: Response): Promise<Response> {
 		try {
 			const body = request.body;
-			// Parse fechaCaducidad como fecha local (YYYY-MM-DD) para evitar offset de zona horaria
+			
 			const toLocalDate = (isoYmd?: string): Date => {
 				if (!isoYmd) return new Date();
 				try {
@@ -42,7 +42,7 @@ export class PublicacionController {
 				fechaActualizacion: new Date(),
 			};
 			const id = await this.app.createPublicacion(pub);
-			// Audit
+			
 			try {
 				if (this.auditoriaApp) {
 					const actorId = (request as any).user?.id ?? undefined;
@@ -95,7 +95,7 @@ export class PublicacionController {
 			if (isNaN(id)) return response.status(400).json({ message: "Id inválido" });
 			const updated = await this.app.updatePublicacion(id, request.body);
 			if (!updated) return response.status(404).json({ message: "No encontrada" });
-			// Audit
+			
 			try {
 				if (this.auditoriaApp) {
 					const actorId = (request as any).user?.id ?? undefined;
@@ -125,7 +125,7 @@ export class PublicacionController {
 			if (isNaN(id)) return response.status(400).json({ message: "Id inválido" });
 			const deleted = await this.app.deletePublicacion(id);
 			if (!deleted) return response.status(404).json({ message: "No encontrada" });
-			// Audit
+			
 			try {
 				if (this.auditoriaApp) {
 					const actorId = (request as any).user?.id ?? undefined;

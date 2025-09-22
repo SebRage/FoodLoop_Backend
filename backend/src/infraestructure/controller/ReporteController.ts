@@ -31,7 +31,7 @@ export class ReporteController {
       };
 
       const reporteId = await this.app.createReporte(reporte);
-      // Audit
+      
       try {
         if (this.auditoriaApp) {
           const actorId = (request as any).user?.id ?? undefined;
@@ -104,7 +104,7 @@ export class ReporteController {
       }
   const deleted = await this.app.deleteReporte(id);
       if (!deleted) return response.status(404).json({ message: "Reporte no encontrado" });
-      // Audit
+      
       try {
         if (this.auditoriaApp) {
           const actorId = (request as any).user?.id ?? undefined;
@@ -151,7 +151,7 @@ export class ReporteController {
         return response.status(400).json({ message: "Error en parámetro" });
       }
 
-      // Permitir actualizar: descripcion, estado, reportanteId, publicacionId, fechaReporte
+      
       let { descripcion, estado } = request.body;
       const reportanteIdRaw = request.body.reportanteId ?? request.body.reportante_id ?? request.body.idReportante ?? request.body.usuarioId;
       const publicacionIdRaw = request.body.publicacionId ?? request.body.publicacion_id ?? request.body.idPublicacion;

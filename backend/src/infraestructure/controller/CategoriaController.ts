@@ -75,7 +75,7 @@ export class CategoriaController {
 			if (isNaN(id)) return response.status(400).json({ message: "Id inválido" });
 			const updated = await this.app.updateCategoria(id, request.body);
 			if (!updated) return response.status(404).json({ message: "No encontrada" });
-			// Audit
+			
 			try {
 				if (this.auditoriaApp) {
 					const actorId = (request as any).user?.id ?? undefined;
@@ -105,7 +105,7 @@ export class CategoriaController {
 			if (isNaN(id)) return response.status(400).json({ message: "Id inválido" });
 			const deleted = await this.app.deleteCategoria(id);
 			if (!deleted) return response.status(404).json({ message: "No encontrada" });
-			// Audit
+			
 			try {
 				if (this.auditoriaApp) {
 					const actorId = (request as any).user?.id ?? undefined;

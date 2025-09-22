@@ -11,14 +11,14 @@ export class PublicacionAdapter implements PublicacionPort {
         this.publicacionRepository = AppDataSource.getRepository(PublicacionEntity);
     }
 
-    
+
     private toDomain(entity: PublicacionEntity): Publicacion {
         return {
             id: entity.id_publicacion,
             usuarioId: entity.usuario_id,
             categoriaId: entity.categoria_id,
             titulo: entity.titulo,
-            descripcion: entity.descripcion, 
+            descripcion: entity.descripcion,
             tipo: entity.tipo,
             cantidad: entity.cantidad,
             precio: entity.precio,
@@ -26,35 +26,38 @@ export class PublicacionAdapter implements PublicacionPort {
             estado: entity.estado,
             fechaCreacion: entity.fecha_creacion,
             fechaActualizacion: entity.fecha_actualizacion,
-            // Relaciones opcionales
-            ...(entity.usuario ? { usuario: {
-                id: entity.usuario.id_usuario,
-                tipoEntidad: entity.usuario.tipo_entidad,
-                nombreEntidad: entity.usuario.nombre_entidad,
-                correo: entity.usuario.correo,
-                telefono: entity.usuario.telefono,
-                ubicacion: entity.usuario.ubicacion,
-                direccion: entity.usuario.direccion,
-                password: entity.usuario.password,
-                estado: entity.usuario.estado,
-                fechaRegistro: entity.usuario.fecha_registro ? entity.usuario.fecha_registro.toISOString() : undefined,
-            }} : {}),
-            ...(entity.categoria ? { categoria: {
-                id: entity.categoria.id_categoria,
-                nombre: entity.categoria.nombre,
-                descripcion: entity.categoria.descripcion,
-                estado: entity.categoria.estado,
-            } } : {}),
+            ...(entity.usuario ? {
+                usuario: {
+                    id: entity.usuario.id_usuario,
+                    tipoEntidad: entity.usuario.tipo_entidad,
+                    nombreEntidad: entity.usuario.nombre_entidad,
+                    correo: entity.usuario.correo,
+                    telefono: entity.usuario.telefono,
+                    ubicacion: entity.usuario.ubicacion,
+                    direccion: entity.usuario.direccion,
+                    password: entity.usuario.password,
+                    estado: entity.usuario.estado,
+                    fechaRegistro: entity.usuario.fecha_registro ? entity.usuario.fecha_registro.toISOString() : undefined,
+                }
+            } : {}),
+            ...(entity.categoria ? {
+                categoria: {
+                    id: entity.categoria.id_categoria,
+                    nombre: entity.categoria.nombre,
+                    descripcion: entity.categoria.descripcion,
+                    estado: entity.categoria.estado,
+                }
+            } : {}),
         };
     }
 
-    
+
     private toEntity(publicacion: Omit<Publicacion, "id">): PublicacionEntity {
         const entity = new PublicacionEntity();
         entity.usuario_id = publicacion.usuarioId;
         entity.categoria_id = publicacion.categoriaId;
         entity.titulo = publicacion.titulo!;
-        entity.descripcion = publicacion.descripcion!; 
+        entity.descripcion = publicacion.descripcion!;
         entity.tipo = publicacion.tipo!;
         entity.cantidad = publicacion.cantidad!;
         entity.precio = publicacion.precio!;
@@ -102,7 +105,7 @@ export class PublicacionAdapter implements PublicacionPort {
             if (!existing) {
                 throw new Error("Publicación no encontrada");
             }
-            // Permitir cambiar usuario y categoría asociados si se proveen
+            
             if (publicacion.usuarioId !== undefined) {
                 existing.usuario_id = Number(publicacion.usuarioId);
             }
