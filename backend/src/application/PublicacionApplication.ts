@@ -2,7 +2,7 @@ import { PublicacionPort } from "../domain/PublicacionPort";
 import { Publicacion } from "../domain/Publicacion";
 
 export class PublicacionApplication {
-    private port: PublicacionPort;
+    private readonly port: PublicacionPort;
     constructor(port: PublicacionPort) {
         this.port = port;
     }

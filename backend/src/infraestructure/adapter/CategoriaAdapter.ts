@@ -5,7 +5,7 @@ import { AppDataSource } from "../config/data-base";
 import { Repository } from "typeorm";
 
 export class CategoriaAdapter implements CategoriaPort {
-    private categoriaRepository: Repository<CategoriaEntity>;
+    private readonly categoriaRepository: Repository<CategoriaEntity>;
 
     constructor() {
         this.categoriaRepository = AppDataSource.getRepository(CategoriaEntity);

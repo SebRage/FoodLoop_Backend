@@ -1,4 +1,3 @@
-import { promises } from "dns";
 import express from "express";
 import http from "http";
 import envs from "../config/environment-vars";
@@ -20,9 +19,10 @@ export class ServerBootstrap {
           console.log(`Server is running on port ${PORT}`);
           resolve(true);
         })
-        .on("error", (err) => {
-          console.log(`Error starting server on port ${err}`);
-          reject(false);
+        .on("error", (err: unknown) => {
+          console.error(`Error starting server on port ${PORT}:`, err);
+          const reason = err instanceof Error ? err : new Error(String(err));
+          reject(reason);
         });
     });
   }

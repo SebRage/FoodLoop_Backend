@@ -7,7 +7,7 @@ import { Repository } from "typeorm";
 import { UserEntity } from "../entities/UserEntity";
 
 export class AuditoriaAdapter implements AuditoriaPort {
-    private auditoriaRepository: Repository<AuditoriaEntity>;
+    private readonly auditoriaRepository: Repository<AuditoriaEntity>;
 
     constructor() {
         this.auditoriaRepository = AppDataSource.getRepository(AuditoriaEntity);

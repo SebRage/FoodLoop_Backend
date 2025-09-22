@@ -2,7 +2,7 @@ import { CategoriaPort } from "../domain/CategoriaPort";
 import { Categoria } from "../domain/Categoria";
 
 export class CategoriaApplication {
-    private port: CategoriaPort;
+    private readonly port: CategoriaPort;
     constructor(port: CategoriaPort) {
         this.port = port;
     }

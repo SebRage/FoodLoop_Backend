@@ -4,7 +4,7 @@ import { AuthApplication } from "./AuthApplication";
 import bcrypt from "bcryptjs";
 
 export class UserApplicationService {
-    private port: UserPort;
+    private readonly port: UserPort;
     constructor(port: UserPort) {
         this.port = port;
     }

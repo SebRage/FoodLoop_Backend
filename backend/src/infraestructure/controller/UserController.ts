@@ -14,6 +14,62 @@ export class UserController {
     this.auditoriaApp = auditoriaApp;
   }
 
+  // --- Helpers to keep methods small and readable ---
+  private trimIfString(v: any): string | undefined {
+    return typeof v === 'string' ? v.trim() : undefined;
+  }
+
+  private toOptionalNumber(raw: any): number | undefined {
+    if (raw === undefined || raw === null || raw === '') return undefined;
+    const n = Number(raw);
+    return isNaN(n) ? undefined : n;
+  }
+
+  private validateNameOptional(raw: any): string | undefined {
+    const name = this.trimIfString(raw);
+    if (name === undefined) return undefined;
+    if (!NAME_REGEX.test(name)) {
+      return "El nombre debe tener al menos 3 caracteres y solo contener letras y caracteres permitidos";
+    }
+    return undefined;
+  }
+
+  private validateEmailOptional(raw: any): string | undefined {
+    const email = this.trimIfString(raw);
+    if (email === undefined) return undefined;
+    if (!EMAIL_REGEX.test(email)) {
+      return "Correo electrónico no válido";
+    }
+    return undefined;
+  }
+
+  private validatePasswordOptional(raw: any): string | undefined {
+    const pwd = this.trimIfString(raw);
+    if (pwd === undefined) return undefined;
+    if (!PASSWORD_REGEX.test(pwd)) {
+      return "La contraseña debe tener al menos 8 caracteres y máximo 25, incluyendo al menos una letra y un número";
+    }
+    return undefined;
+  }
+
+  private async auditSafe(request: Request, tabla: string, registroId: number | undefined, accion: "CREATE" | "UPDATE" | "DELETE", descripcion: string) {
+    try {
+      if (!this.auditoriaApp) return;
+      const actorId = (request as any).user?.id ?? undefined;
+      await this.auditoriaApp.createAuditoria({
+        usuarioId: actorId,
+        tablaAfectada: tabla,
+        registroId,
+        accion,
+        descripcion,
+        estado: 1,
+        fecha: new Date(),
+      });
+    } catch (err) {
+      console.error(`Error creando auditoria (${accion} ${tabla}):`, err);
+    }
+  }
+
   async resetPassword(request: Request, response: Response): Promise<Response> {
     try {
       const email = request.body.email ?? request.body.correo;
@@ -296,52 +352,35 @@ export class UserController {
         return response.status(400).json({ message: "Error en parámetro" });
       }
 
+      const b = request.body || {};
+      const rawName = b.nombreEntidad ?? b.name;
+      const rawEmail = b.correo ?? b.email;
+      const rawPassword = b.password;
+      const rawStatus = b.estado ?? b.status;
+      const rawTipoEntidad = b.tipoEntidad ?? b.tipo_entidad;
+      const rawTelefono = b.telefono ?? b.phone;
+      const rawDireccion = b.direccion ?? b.address;
+      const rawUbicacion = b.ubicacion ?? b.location;
 
+      const validationError = this.validateNameOptional(rawName)
+        || this.validateEmailOptional(rawEmail)
+        || this.validatePasswordOptional(rawPassword);
+      if (validationError) return response.status(400).json({ message: validationError });
 
-      const rawName = (request.body.nombreEntidad ?? request.body.name) as string | undefined;
-      const rawEmail = (request.body.correo ?? request.body.email) as string | undefined;
-      const rawPassword = (request.body.password) as string | undefined;
-      const rawStatus = (request.body.estado ?? request.body.status) as number | string | undefined;
-      const rawTipoEntidad = (request.body.tipoEntidad ?? request.body.tipo_entidad) as string | undefined;
-      const rawTelefono = (request.body.telefono ?? request.body.phone) as string | undefined;
-      const rawDireccion = (request.body.direccion ?? request.body.address) as string | undefined;
-      const rawUbicacion = (request.body.ubicacion ?? request.body.location) as string | undefined;
-
-      // Validaciones 
-      if (typeof rawName === 'string') {
-        const name = rawName.trim();
-        if (!NAME_REGEX.test(name)) {
-          return response.status(400).json({
-            message: "El nombre debe tener al menos 3 caracteres y solo contener letras y caracteres permitidos",
-          });
-        }
-      }
-
-      if (typeof rawEmail === 'string') {
-        const email = rawEmail.trim();
-        if (!EMAIL_REGEX.test(email)) {
-          return response.status(400).json({ message: "Correo electrónico no válido" });
-        }
-      }
-
-      if (typeof rawPassword === 'string') {
-        const password = rawPassword.trim();
-        if (!PASSWORD_REGEX.test(password)) {
-          return response.status(400).json({
-            message: "La contraseña debe tener al menos 8 caracteres y máximo 25, incluyendo al menos una letra y un número",
-          });
-        }
-      }
-
+      const updatePairs: Array<[keyof User, any]> = [
+        ['nombreEntidad', this.trimIfString(rawName)],
+        ['correo', this.trimIfString(rawEmail)],
+        ['password', this.trimIfString(rawPassword)],
+        ['estado', this.toOptionalNumber(rawStatus)],
+        ['tipoEntidad', this.trimIfString(rawTipoEntidad)],
+        ['telefono', this.trimIfString(rawTelefono)],
+        ['direccion', this.trimIfString(rawDireccion)],
+        ['ubicacion', this.trimIfString(rawUbicacion)],
+      ];
       const updatePayload: Partial<User> = {};
-      if (typeof rawName === 'string') updatePayload.nombreEntidad = rawName.trim();
-      if (typeof rawEmail === 'string') updatePayload.correo = rawEmail.trim();
-      if (typeof rawPassword === 'string') updatePayload.password = rawPassword.trim();
-      if (typeof rawStatus !== 'undefined') updatePayload.estado = Number(rawStatus);
-      if (typeof rawTipoEntidad === 'string') updatePayload.tipoEntidad = rawTipoEntidad.trim();
-      if (typeof rawTelefono === 'string') updatePayload.telefono = rawTelefono.trim();
-      if (typeof rawDireccion === 'string') updatePayload.direccion = rawDireccion.trim();
-      if (typeof rawUbicacion === 'string') updatePayload.ubicacion = rawUbicacion.trim();
+      for (const [key, value] of updatePairs) {
+        if (value !== undefined) (updatePayload as any)[key] = value;
+      }
 
       if (Object.keys(updatePayload).length === 0) {
         return response.status(400).json({ message: "No hay campos para actualizar" });
@@ -349,29 +388,10 @@ export class UserController {
 
       const updated = await this.app.updateUser(id, updatePayload);
       if (!updated) {
-        return response.status(404).json({
-          message: "Usuario no encontrado o error al actualizar",
-        });
+        return response.status(404).json({ message: "Usuario no encontrado o error al actualizar" });
       }
 
-      
-      try {
-        if (this.auditoriaApp) {
-          const actorId = (request as any).user?.id ?? undefined;
-          await this.auditoriaApp.createAuditoria({
-            usuarioId: actorId,
-            tablaAfectada: "users",
-            registroId: id,
-            accion: "UPDATE",
-            descripcion: `Usuario actualizado con id ${id}`,
-            estado: 1,
-            fecha: new Date(),
-          });
-        }
-      } catch (err) {
-        console.error("Error creando auditoria (updateUser):", err);
-      }
-
+      await this.auditSafe(request, 'users', id, 'UPDATE', `Usuario actualizado con id ${id}`);
       return response.status(200).json({ message: "Usuario actualizado con éxito" });
     } catch (error: any) {
       const msg = String(error?.message || "");

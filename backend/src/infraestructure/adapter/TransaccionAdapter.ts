@@ -5,7 +5,7 @@ import { AppDataSource } from "../config/data-base";
 import { Repository } from "typeorm";
 
 export class TransaccionAdapter implements TransaccionPort {
-    private transaccionRepository: Repository<TransaccionEntity>;
+    private readonly transaccionRepository: Repository<TransaccionEntity>;
 
     constructor() {
         this.transaccionRepository = AppDataSource.getRepository(TransaccionEntity);

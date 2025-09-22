@@ -2,7 +2,7 @@ import { AuditoriaPort } from "../domain/AuditoriaPort";
 import { Auditoria } from "../domain/Auditoria";
 
 export class AuditoriaApplication {
-    private port: AuditoriaPort;
+    private readonly port: AuditoriaPort;
     constructor(port: AuditoriaPort) {
         this.port = port;
     }

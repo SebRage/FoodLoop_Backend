@@ -2,7 +2,7 @@ import { ReportePort } from "../domain/ReportePort";
 import { Reporte } from "../domain/Reporte";
 
 export class ReporteApplication {
-    private port: ReportePort;
+    private readonly port: ReportePort;
     constructor(port: ReportePort) {
         this.port = port;
     }

@@ -5,7 +5,7 @@ import { AppDataSource } from "../config/data-base";
 import { Repository } from "typeorm";
 
 export class ReporteAdapter implements ReportePort {
-    private reporteRepository: Repository<ReporteEntity>;
+    private readonly reporteRepository: Repository<ReporteEntity>;
 
     constructor() {
         this.reporteRepository = AppDataSource.getRepository(ReporteEntity);

@@ -12,6 +12,60 @@ export class ReporteController {
     this.auditoriaApp = auditoriaApp;
   }
 
+  // --- Helpers to keep methods simpler and reduce branching ---
+  private toOptionalNumber(raw: any, fieldName: string): { value?: number; error?: string } {
+    if (raw === undefined) return {};
+    const n = Number(raw);
+    if (isNaN(n)) return { error: `${fieldName} inválido` };
+    return { value: n };
+  }
+
+  private parseEstado(raw: any): { value?: number; error?: string } {
+    if (raw === undefined) return {};
+    const n = Number(raw);
+    if (isNaN(n)) return { error: "Estado inválido" };
+    return { value: n };
+  }
+
+  private parseFechaFlexible(raw: any): { value?: Date; error?: string } {
+    if (raw === undefined) return {};
+    try {
+      if (typeof raw === 'string') {
+        const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(raw);
+        if (m) {
+          const y = parseInt(m[1], 10), mo = parseInt(m[2], 10) - 1, d = parseInt(m[3], 10);
+          return { value: new Date(y, mo, d, 12, 0, 0) };
+        }
+        const dt = new Date(raw);
+        if (isNaN(dt.getTime())) return { error: "fechaReporte inválida" };
+        return { value: dt };
+      }
+      const dt = new Date(raw);
+      if (isNaN(dt.getTime())) return { error: "fechaReporte inválida" };
+      return { value: dt };
+    } catch {
+      return { error: "fechaReporte inválida" };
+    }
+  }
+
+  private async auditSafe(request: Request, registroId: number, accion: "CREATE" | "UPDATE" | "DELETE", descripcion: string) {
+    try {
+      if (!this.auditoriaApp) return;
+      const actorId = (request as any).user?.id ?? undefined;
+      await this.auditoriaApp.createAuditoria({
+        usuarioId: actorId,
+        tablaAfectada: "reportes",
+        registroId,
+        accion,
+        descripcion,
+        estado: 1,
+        fecha: new Date(),
+      });
+    } catch (err) {
+      console.error(`Error creando auditoria (${accion} reporte):`, err);
+    }
+  }
+
   async createReporte(request: Request, response: Response): Promise<Response> {
     try {
       const descripcion = request.body.descripcion ?? request.body.descripcionReporte;
@@ -151,55 +205,31 @@ export class ReporteController {
         return response.status(400).json({ message: "Error en parámetro" });
       }
 
-      
-      let { descripcion, estado } = request.body;
-      const reportanteIdRaw = request.body.reportanteId ?? request.body.reportante_id ?? request.body.idReportante ?? request.body.usuarioId;
-      const publicacionIdRaw = request.body.publicacionId ?? request.body.publicacion_id ?? request.body.idPublicacion;
-      const fechaReporteRaw = request.body.fechaReporte ?? request.body.fecha_reporte ?? request.body.fecha;
+      const body = request.body || {};
+      const descripcion = body.descripcion;
+      const estadoRaw = body.estado;
+      const reportanteIdRaw = body.reportanteId ?? body.reportante_id ?? body.idReportante ?? body.usuarioId;
+      const publicacionIdRaw = body.publicacionId ?? body.publicacion_id ?? body.idPublicacion;
+      const fechaReporteRaw = body.fechaReporte ?? body.fecha_reporte ?? body.fecha;
 
+      // Validaciones y conversiones compactas
       if (descripcion !== undefined && typeof descripcion !== "string") {
         return response.status(400).json({ message: "Descripción inválida" });
       }
-      if (estado !== undefined && typeof estado !== "number") {
-        const maybeNum = Number(estado);
-        if (isNaN(maybeNum)) return response.status(400).json({ message: "Estado inválido" });
-        estado = maybeNum;
-      }
-      let reportanteId: number | undefined = undefined;
-      if (reportanteIdRaw !== undefined) {
-        const n = Number(reportanteIdRaw);
-        if (isNaN(n)) return response.status(400).json({ message: "reportanteId inválido" });
-        reportanteId = n;
-      }
-      let publicacionId: number | undefined = undefined;
-      if (publicacionIdRaw !== undefined) {
-        const n = Number(publicacionIdRaw);
-        if (isNaN(n)) return response.status(400).json({ message: "publicacionId inválido" });
-        publicacionId = n;
-      }
-      let fechaReporte: Date | undefined = undefined;
-      if (fechaReporteRaw !== undefined) {
-        try {
-          if (typeof fechaReporteRaw === 'string') {
-            const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(fechaReporteRaw);
-            if (m) {
-              const y = parseInt(m[1], 10), mo = parseInt(m[2], 10) - 1, d = parseInt(m[3], 10);
-              fechaReporte = new Date(y, mo, d, 12, 0, 0);
-            } else {
-              const tmp = new Date(fechaReporteRaw);
-              if (isNaN(tmp.getTime())) return response.status(400).json({ message: "fechaReporte inválida" });
-              fechaReporte = tmp;
-            }
-          } else {
-            const tmp = new Date(fechaReporteRaw);
-            if (isNaN(tmp.getTime())) return response.status(400).json({ message: "fechaReporte inválida" });
-            fechaReporte = tmp;
-          }
-        } catch (e) {
-          return response.status(400).json({ message: "fechaReporte inválida" });
-        }
-      }
 
+      const { value: estado, error: estadoError } = this.parseEstado(estadoRaw);
+      if (estadoError) return response.status(400).json({ message: estadoError });
+
+      const { value: reportanteId, error: reportanteError } = this.toOptionalNumber(reportanteIdRaw, "reportanteId");
+      if (reportanteError) return response.status(400).json({ message: reportanteError });
+
+      const { value: publicacionId, error: publicacionError } = this.toOptionalNumber(publicacionIdRaw, "publicacionId");
+      if (publicacionError) return response.status(400).json({ message: publicacionError });
+
+      const { value: fechaReporte, error: fechaError } = this.parseFechaFlexible(fechaReporteRaw);
+      if (fechaError) return response.status(400).json({ message: fechaError });
+
+      // Construye payload incluyendo únicamente los campos presentes
       const payload: Partial<Reporte> = {};
       if (descripcion !== undefined) payload.descripcion = descripcion;
       if (estado !== undefined) payload.estado = estado as number;
@@ -211,23 +241,8 @@ export class ReporteController {
       if (!updated) {
         return response.status(404).json({ message: "Reporte no encontrado o error al actualizar" });
       }
-      // Audit
-      try {
-        if (this.auditoriaApp) {
-          const actorId = (request as any).user?.id ?? undefined;
-          await this.auditoriaApp.createAuditoria({
-            usuarioId: actorId,
-            tablaAfectada: "reportes",
-            registroId: id,
-            accion: "UPDATE",
-            descripcion: `Reporte actualizado con id ${id}`,
-            estado: 1,
-            fecha: new Date(),
-          });
-        }
-      } catch (err) {
-        console.error("Error creando auditoria (updateReporte):", err);
-      }
+
+      await this.auditSafe(request, id, "UPDATE", `Reporte actualizado con id ${id}`);
       return response.status(200).json({ message: "Reporte actualizado con éxito" });
     } catch (error: any) {
       console.error("updateReporte error:", error);

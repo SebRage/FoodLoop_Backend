@@ -13,7 +13,7 @@ try {
 }
 
 export class UserAdapter implements UserPort {
-    private userRepository: Repository<UserEntity>;
+    private readonly userRepository: Repository<UserEntity>;
 
     constructor() {
         this.userRepository = AppDataSource.getRepository(UserEntity);
