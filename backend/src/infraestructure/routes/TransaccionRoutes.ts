@@ -5,6 +5,8 @@ import { TransaccionController } from "../controller/TransaccionController";
 import { authenticateToken } from "../web/authMiddleware";
 import { AuditoriaAdapter } from "../adapter/AuditoriaAdapter";
 import { AuditoriaApplication } from "../../application/AuditoriaApplication";
+import { PublicacionAdapter } from "../adapter/PublicacionAdapter";
+import { PublicacionApplication } from "../../application/PublicacionApplication";
 
 const router = Router();
 
@@ -12,7 +14,9 @@ const transaccionAdapter = new TransaccionAdapter();
 const transaccionApp = new TransaccionApplication(transaccionAdapter);
 const auditoriaAdapter = new AuditoriaAdapter();
 const auditoriaApp = new AuditoriaApplication(auditoriaAdapter);
-const transaccionController = new TransaccionController(transaccionApp, auditoriaApp);
+const publicacionAdapter = new PublicacionAdapter();
+const publicacionApp = new PublicacionApplication(publicacionAdapter);
+const transaccionController = new TransaccionController(transaccionApp, auditoriaApp, publicacionApp);
 
 router.post("/transacciones", authenticateToken, async (request, response) => {
   try {

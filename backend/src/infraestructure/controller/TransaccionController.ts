@@ -2,19 +2,37 @@ import { Request, Response } from "express";
 import { TransaccionApplication } from "../../application/TransaccionApplication";
 import { Transaccion } from "../../domain/Transaccion";
 import { AuditoriaApplication } from "../../application/AuditoriaApplication";
+import { PublicacionApplication } from "../../application/PublicacionApplication";
 
 export class TransaccionController {
 	private app: TransaccionApplication;
 	private auditoriaApp?: AuditoriaApplication;
+	private publicacionApp?: PublicacionApplication;
 
-	constructor(app: TransaccionApplication, auditoriaApp?: AuditoriaApplication) {
+	constructor(app: TransaccionApplication, auditoriaApp?: AuditoriaApplication, publicacionApp?: PublicacionApplication) {
 		this.app = app;
 		this.auditoriaApp = auditoriaApp;
+		this.publicacionApp = publicacionApp;
 	}
 
 	async createTransaccion(request: Request, response: Response): Promise<Response> {
 		try {
 			const b = request.body;
+			const pubIdNum = Number(b.publicacionId);
+			if (!isFinite(pubIdNum)) {
+				return response.status(400).json({ message: "publicacionId inválido" });
+			}
+			// Validar que la publicación exista y esté activa (estado === 1)
+			try {
+				if (this.publicacionApp) {
+					const pub = await this.publicacionApp.getPublicacionById(pubIdNum);
+					if (!pub) return response.status(404).json({ message: "Publicación no encontrada" });
+					if (Number(pub.estado) !== 1) return response.status(409).json({ message: "Publicación no disponible" });
+				}
+			} catch (err) {
+				console.error("Error validando publicación en createTransaccion:", err);
+				return response.status(500).json({ message: "Error al validar publicación" });
+			}
 			// Normalizar fechaTransaccion: aceptar 'YYYY-MM-DD' y convertir a mediodía local
 			let fechaTransaccion: Date = new Date();
 			if (b.fechaTransaccion !== undefined) {
@@ -39,13 +57,35 @@ export class TransaccionController {
 				}
 			}
 			const t: Omit<Transaccion, "id"> = {
-				publicacionId: Number(b.publicacionId),
+				publicacionId: pubIdNum,
 				donanteVendedorId: Number(b.donanteVendedorId),
 				beneficiarioCompradorId: Number(b.beneficiarioCompradorId),
 				estado: 1,
 				fechaTransaccion: fechaTransaccion,
 			};
 			const id = await this.app.createTransaccion(t);
+			// Pausar publicación (estado = 0) para que no sea visible a otros
+			try {
+				if (this.publicacionApp) {
+					await this.publicacionApp.updatePublicacion(pubIdNum, { estado: 0, fechaActualizacion: new Date() as any });
+					// Audit publicación pausada
+					if (this.auditoriaApp) {
+						const actorId = (request as any).user?.id ?? undefined;
+						await this.auditoriaApp.createAuditoria({
+							usuarioId: actorId,
+							tablaAfectada: "publicaciones",
+							registroId: pubIdNum,
+							accion: "UPDATE",
+							descripcion: `Publicación ${pubIdNum} pausada por creación de transacción ${id}`,
+							estado: 1,
+							fecha: new Date(),
+						});
+					}
+				}
+			} catch (err) {
+				console.error("Error pausando publicación en createTransaccion:", err);
+				// No revertimos la transacción creada, pero reportamos el fallo de pausa
+			}
 			// Audit
 			try {
 				if (this.auditoriaApp) {
